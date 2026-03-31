@@ -1,0 +1,7 @@
+[
+  { "id": 1, "text": "The quick brown fox jumps over the lazy dog", "category": "animals" },
+  { "id": 2, "text": "Machine learning models encode semantic meaning", "category": "technology" },
+  { "id": 3, "text": "A stitch in time saves nine", "category": "proverbs" },
+  { "id": 4, "text": "The mitochondria is the powerhouse of the cell", "category": "biology" },
+  { "id": 5, "text": "To be, or not to be, that is the question", "category": "literature" }
+]

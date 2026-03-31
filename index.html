@@ -4,10 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EmbedGen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/css/main.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <span class="site-header__logo">Embed<span>Gen</span></span>
+      </div>
+    </header>
+
+    <main id="app" class="site-main"></main>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <span>EmbedGen — generate embeddings for TensorFlow Projector</span>
+        <a href="https://projector.tensorflow.org/" target="_blank" rel="noopener">Open TF Projector</a>
+      </div>
+    </footer>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
