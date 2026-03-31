@@ -14,33 +14,33 @@
  * @param {{ headers: string[], rows: (string|null)[][] }} data
  * @param {string|null} selectedColumn
  * @param {number} maxRows
+ * @param {Set<string>} [imageColumns]  Column names whose values should render as thumbnails
  * @returns {HTMLElement}
  */
-export function createDataPreview({ data, selectedColumn = null, maxRows = 10 }) {
+export function createDataPreview({ data, selectedColumn = null, maxRows = 10, imageColumns = new Set() }) {
   const wrapper = document.createElement('div');
   wrapper.className = 'data-preview';
-  render(wrapper, data, selectedColumn, maxRows);
+  render(wrapper, data, selectedColumn, maxRows, imageColumns);
   return wrapper;
 }
 
 /**
  * Re-render an existing data preview element with new options.
- * Only selectedColumn and maxRows can change — data is fixed after creation.
  * @param {HTMLElement} el  Element returned by createDataPreview
- * @param {{ data?: object, selectedColumn?: string|null, maxRows?: number }} updates
+ * @param {{ data?: object, selectedColumn?: string|null, maxRows?: number, imageColumns?: Set<string> }} updates
  */
 export function updateDataPreview(el, updates) {
   const prev = el._previewState;
   const next = { ...prev, ...updates };
   el._previewState = next;
-  render(el, next.data, next.selectedColumn, next.maxRows);
+  render(el, next.data, next.selectedColumn, next.maxRows, next.imageColumns);
 }
 
 // ── Internal helpers ──────────────────────────────────────────────
 
-function render(wrapper, data, selectedColumn, maxRows) {
+function render(wrapper, data, selectedColumn, maxRows, imageColumns = new Set()) {
   // Store state for updates
-  wrapper._previewState = { data, selectedColumn, maxRows };
+  wrapper._previewState = { data, selectedColumn, maxRows, imageColumns };
   wrapper.innerHTML = '';
 
   if (!data || !data.headers || data.headers.length === 0) {
@@ -87,13 +87,26 @@ function render(wrapper, data, selectedColumn, maxRows) {
   const tbody = document.createElement('tbody');
   visibleRows.forEach(row => {
     const tr = document.createElement('tr');
-    headers.forEach((_, i) => {
+    headers.forEach((h, i) => {
       const td = document.createElement('td');
       const val = row[i];
-      td.textContent = val === null || val === undefined ? '' : val;
-      if (val === null || val === undefined || String(val).trim() === '') {
-        td.classList.add('data-preview__cell--empty');
+      const isEmpty = val === null || val === undefined || String(val).trim() === '';
+
+      if (!isEmpty && imageColumns.has(h)) {
+        const img = document.createElement('img');
+        img.src = String(val).trim();
+        img.alt = '';
+        img.className = 'data-preview__thumb';
+        img.loading = 'lazy';
+        img.width = 48;
+        img.height = 48;
+        td.appendChild(img);
+        td.classList.add('data-preview__cell--image');
+      } else {
+        td.textContent = isEmpty ? '' : val;
+        if (isEmpty) td.classList.add('data-preview__cell--empty');
       }
+
       if (i === selectedIndex) td.classList.add('data-preview__cell--selected');
       tr.appendChild(td);
     });

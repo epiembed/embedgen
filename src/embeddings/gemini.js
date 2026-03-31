@@ -40,9 +40,25 @@ function parseError(response, body) {
 }
 
 /**
- * Embed texts using the Gemini batchEmbedContents API.
+ * Convert a single input value into Gemini content parts array.
+ * @param {string|{type:string,[key:string]:any}} input
+ * @returns {object[]}
+ */
+function toGeminiParts(input) {
+  if (typeof input === 'string') {
+    return [{ text: input }];
+  }
+  if (input.type === 'image_base64') {
+    return [{ inlineData: { mimeType: input.mimeType, data: input.data } }];
+  }
+  throw new EmbeddingError(`Unsupported input type for Gemini: ${input.type}`);
+}
+
+/**
+ * Embed inputs using the Gemini batchEmbedContents API.
+ * Supports plain text strings and base64 image objects for multimodal models.
  *
- * @param {string[]} texts
+ * @param {(string|{type:string,[key:string]:any})[]} inputs
  * @param {string} modelName  e.g. 'gemini-embedding-001'
  * @param {string} apiKey
  * @param {{
@@ -51,14 +67,13 @@ function parseError(response, body) {
  * }} [options]
  * @returns {Promise<number[][]>}
  */
-async function embed(texts, modelName, apiKey, options = {}) {
+async function embed(inputs, modelName, apiKey, options = {}) {
   const url = `${endpoint(modelName)}?key=${encodeURIComponent(apiKey)}`;
 
-  // Build one request object per text
-  const requests = texts.map(text => {
+  const requests = inputs.map(input => {
     const req = {
       model: `models/${modelName}`,
-      content: { parts: [{ text }] },
+      content: { parts: toGeminiParts(input) },
     };
     if (options.taskType != null) req.taskType = options.taskType;
     if (options.outputDimensionality != null) req.outputDimensionality = options.outputDimensionality;

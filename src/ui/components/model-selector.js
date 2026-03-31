@@ -24,10 +24,14 @@ const INPUT_TYPE_LABELS = {
 };
 
 /**
- * @param {{ selectedId?: string, onChange: (modelId: string) => void }} options
+ * @param {{
+ *   selectedId?: string,
+ *   onChange: (modelId: string) => void,
+ *   allowedInputTypes?: ('text'|'image'|'multimodal')[]
+ * }} options
  * @returns {HTMLElement}
  */
-export function createModelSelector({ selectedId = null, onChange }) {
+export function createModelSelector({ selectedId = null, onChange, allowedInputTypes = null }) {
   const wrapper = document.createElement('div');
   wrapper.className = 'model-selector';
 
@@ -42,10 +46,15 @@ export function createModelSelector({ selectedId = null, onChange }) {
 
   // Build grouped options
   for (const provider of getProviders()) {
+    const providerModels = MODELS.filter(m =>
+      m.provider === provider &&
+      (allowedInputTypes === null || allowedInputTypes.includes(m.inputType))
+    );
+    if (providerModels.length === 0) continue;
+
     const group = document.createElement('optgroup');
     group.label = PROVIDER_LABELS[provider] ?? provider;
 
-    const providerModels = MODELS.filter(m => m.provider === provider);
     for (const model of providerModels) {
       const option = document.createElement('option');
       option.value = model.id;

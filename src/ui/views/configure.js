@@ -43,15 +43,20 @@ export function renderConfigure(container, state, store) {
   heading.textContent = 'Configure embeddings';
   el.appendChild(heading);
 
+  // ── Image column detection ──────────────────────────────────────
+  const imageColumns = detectImageColumns(data);
+  const isImageColumn = col => col !== null && imageColumns.has(col);
+
+  // ── Preview ─────────────────────────────────────────────────────
+  const previewEl = createDataPreview({ data, selectedColumn, maxRows: 5, imageColumns });
+  previewEl.className += ' configure__preview';
+
   // ── Section: Column selection ───────────────────────────────────
-  el.appendChild(buildSection('Embedding column', buildColumnSelector(data, selectedColumn, store, previewEl)));
+  el.appendChild(buildSection('Embedding column', buildColumnSelector(data, selectedColumn, store, previewEl, onColumnChange)));
 
   // ── Section: Metadata columns ───────────────────────────────────
   el.appendChild(buildSection('Metadata columns', buildMetaSelector(data, selectedColumn, store)));
 
-  // ── Preview ─────────────────────────────────────────────────────
-  const previewEl = createDataPreview({ data, selectedColumn, maxRows: 5 });
-  previewEl.className += ' configure__preview';
   el.appendChild(buildSection('Data preview', previewEl));
 
   // ── Section: Model ──────────────────────────────────────────────
@@ -73,30 +78,56 @@ export function renderConfigure(container, state, store) {
   // API key section — title adapts for HF
   const apiKeySection = buildSection('API key', apiKeyWrapper);
 
-  const modelSelector = createModelSelector({
-    selectedId: currentModelId,
-    onChange: modelId => {
-      currentModelId = modelId;
-      const model = getModelById(modelId);
-      const isHF = model?.provider === 'huggingface';
-      store.setState({ modelId, apiKey: '', dimensions: null });
-      updateDimensionSlider(dimSlider, modelId);
-      renderApiKeyInput(apiKeyWrapper, modelId, store);
-      privacyBanner.hidden = !isHF;
-      apiKeySection.querySelector('.configure__section-title').textContent =
-        isHF ? 'Runtime' : 'API key';
-    },
-  });
+  // Model selector lives in a wrapper so it can be rebuilt on column change
+  const modelSelectorWrapper = document.createElement('div');
+
+  function buildModelSelector(allowedInputTypes) {
+    modelSelectorWrapper.innerHTML = '';
+    const sel = createModelSelector({
+      selectedId: currentModelId,
+      allowedInputTypes,
+      onChange: modelId => {
+        currentModelId = modelId;
+        const model = getModelById(modelId);
+        const isHF = model?.provider === 'huggingface';
+        store.setState({ modelId, apiKey: '', dimensions: null });
+        updateDimensionSlider(dimSlider, modelId);
+        renderApiKeyInput(apiKeyWrapper, modelId, store);
+        privacyBanner.hidden = !isHF;
+        apiKeySection.querySelector('.configure__section-title').textContent =
+          isHF ? 'Runtime' : 'API key';
+      },
+    });
+    modelSelectorWrapper.appendChild(sel);
+    return sel;
+  }
+
+  buildModelSelector(isImageColumn(selectedColumn) ? ['multimodal'] : null);
 
   // Set initial section title
   if (getModelById(currentModelId)?.provider === 'huggingface') {
     apiKeySection.querySelector('.configure__section-title').textContent = 'Runtime';
   }
 
-  el.appendChild(buildSection('Model', modelSelector));
+  // Image mode notice
+  const imageModeNotice = document.createElement('p');
+  imageModeNotice.className = 'configure__image-mode-notice';
+  imageModeNotice.textContent = 'Image column detected — showing multimodal models only. OpenAI models are text-only and are hidden.';
+  imageModeNotice.hidden = !isImageColumn(selectedColumn);
+
+  el.appendChild(buildSection('Model', modelSelectorWrapper));
+  el.appendChild(imageModeNotice);
   el.appendChild(privacyBanner);
   el.appendChild(apiKeySection);
   el.appendChild(buildSection('Output dimensions', dimSlider));
+
+  // ── Column change handler ───────────────────────────────────────
+  function onColumnChange(col) {
+    const imgMode = isImageColumn(col);
+    updateDataPreview(previewEl, { selectedColumn: col, imageColumns });
+    buildModelSelector(imgMode ? ['multimodal'] : null);
+    imageModeNotice.hidden = !imgMode;
+  }
 
   // ── Submit ──────────────────────────────────────────────────────
   const errorEl = document.createElement('p');
@@ -135,6 +166,28 @@ export function renderConfigure(container, state, store) {
   container.appendChild(el);
 }
 
+// ── Image column detection ────────────────────────────────────────────
+
+/**
+ * Return the set of column names whose values are mostly http/https URLs.
+ * A column qualifies if ≥50% of non-null values parse as http/https URLs.
+ * @param {{ headers: string[], rows: (string|null)[][] }} data
+ * @returns {Set<string>}
+ */
+export function detectImageColumns(data) {
+  const result = new Set();
+  data.headers.forEach((h, i) => {
+    const vals = data.rows.map(r => r[i]).filter(v => v !== null && v !== undefined && String(v).trim() !== '');
+    if (vals.length === 0) return;
+    const urlCount = vals.filter(v => {
+      try { const u = new URL(String(v).trim()); return u.protocol === 'http:' || u.protocol === 'https:'; }
+      catch { return false; }
+    }).length;
+    if (urlCount / vals.length >= 0.5) result.add(h);
+  });
+  return result;
+}
+
 // ── Builders ──────────────────────────────────────────────────────────
 
 function buildSection(title, content) {
@@ -148,7 +201,7 @@ function buildSection(title, content) {
   return section;
 }
 
-function buildColumnSelector(data, selectedColumn, store, previewEl) {
+function buildColumnSelector(data, selectedColumn, store, previewEl, onColumnChange) {
   const wrapper = document.createElement('div');
   wrapper.className = 'configure__col-select-wrap';
 
@@ -172,6 +225,7 @@ function buildColumnSelector(data, selectedColumn, store, previewEl) {
   select.addEventListener('change', () => {
     store.setState({ selectedColumn: select.value });
     if (previewEl) updateDataPreview(previewEl, { selectedColumn: select.value });
+    onColumnChange?.(select.value);
   });
 
   wrapper.appendChild(label);

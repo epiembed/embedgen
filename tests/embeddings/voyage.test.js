@@ -139,6 +139,62 @@ describe('embed', () => {
   });
 });
 
+// ── multimodal embed ──────────────────────────────────────────────────
+
+describe('embed — multimodal (voyage-multimodal-3.5)', () => {
+  it('calls the multimodal endpoint', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    await adapter.embed(['hello'], 'voyage-multimodal-3.5', 'pa-test');
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toContain('multimodalembeddings');
+  });
+
+  it('wraps plain text input as a text content part', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    await adapter.embed(['hello'], 'voyage-multimodal-3.5', 'pa-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.inputs[0]).toEqual([{ type: 'text', text: 'hello' }]);
+  });
+
+  it('wraps image_url input correctly', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    const input = { type: 'image_url', url: 'https://example.com/img.jpg' };
+    await adapter.embed([input], 'voyage-multimodal-3.5', 'pa-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.inputs[0]).toEqual([{ type: 'image_url', image_url: { url: 'https://example.com/img.jpg' } }]);
+  });
+
+  it('wraps image_base64 input correctly', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    const input = { type: 'image_base64', data: 'abc123', mimeType: 'image/png' };
+    await adapter.embed([input], 'voyage-multimodal-3.5', 'pa-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.inputs[0]).toEqual([{ type: 'image_base64', image_base64: { base64: 'abc123', media_type: 'image/png' } }]);
+  });
+
+  it('sends output_dimension for voyage-multimodal-3.5 (Matryoshka)', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    await adapter.embed(['hi'], 'voyage-multimodal-3.5', 'pa-test', { output_dimension: 512 });
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.output_dimension).toBe(512);
+  });
+
+  it('does NOT send output_dimension for voyage-multimodal-3 (no Matryoshka)', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    await adapter.embed(['hi'], 'voyage-multimodal-3', 'pa-test', { output_dimension: 512 });
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.output_dimension).toBeUndefined();
+  });
+
+  it('uses inputs key (not input) in body', async () => {
+    global.fetch = mockFetch(200, embeddingResponse([[0.1]]));
+    await adapter.embed(['hi'], 'voyage-multimodal-3.5', 'pa-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.inputs).toBeDefined();
+    expect(body.input).toBeUndefined();
+  });
+});
+
 // ── validateApiKey ────────────────────────────────────────────────────
 
 describe('validateApiKey', () => {

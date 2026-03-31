@@ -131,6 +131,48 @@ describe('embed', () => {
   });
 });
 
+// ── multimodal embed ──────────────────────────────────────────────────
+
+describe('embed — multimodal (gemini-embedding-2-preview)', () => {
+  it('sends text input as a text part', async () => {
+    global.fetch = mockFetch(200, batchResponse([[0.1]]));
+    await adapter.embed(['hello'], 'gemini-embedding-2-preview', 'AIza-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.requests[0].content.parts[0]).toEqual({ text: 'hello' });
+  });
+
+  it('sends image_base64 input as inlineData part', async () => {
+    global.fetch = mockFetch(200, batchResponse([[0.1]]));
+    const input = { type: 'image_base64', data: 'abc123', mimeType: 'image/jpeg' };
+    await adapter.embed([input], 'gemini-embedding-2-preview', 'AIza-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.requests[0].content.parts[0]).toEqual({
+      inlineData: { mimeType: 'image/jpeg', data: 'abc123' },
+    });
+  });
+
+  it('handles mixed text and image inputs in same batch', async () => {
+    global.fetch = mockFetch(200, batchResponse([[0.1], [0.2]]));
+    const inputs = [
+      'hello',
+      { type: 'image_base64', data: 'xyz', mimeType: 'image/png' },
+    ];
+    await adapter.embed(inputs, 'gemini-embedding-2-preview', 'AIza-test');
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body);
+    expect(body.requests[0].content.parts[0]).toEqual({ text: 'hello' });
+    expect(body.requests[1].content.parts[0]).toEqual({
+      inlineData: { mimeType: 'image/png', data: 'xyz' },
+    });
+  });
+
+  it('uses gemini-embedding-2-preview endpoint', async () => {
+    global.fetch = mockFetch(200, batchResponse([[0.1]]));
+    await adapter.embed(['hi'], 'gemini-embedding-2-preview', 'AIza-test');
+    const [url] = global.fetch.mock.calls[0];
+    expect(url).toContain('gemini-embedding-2-preview:batchEmbedContents');
+  });
+});
+
 // ── validateApiKey ────────────────────────────────────────────────────
 
 describe('validateApiKey', () => {
