@@ -70,7 +70,7 @@ export function renderConfigure(container, state, store) {
   });
 
   const apiKeyWrapper = document.createElement('div');
-  renderApiKeyInput(apiKeyWrapper, currentModelId, store);
+  renderApiKeyInput(apiKeyWrapper, currentModelId);
 
   // Privacy banner — shown only for HuggingFace models
   const privacyBanner = buildPrivacyBanner();
@@ -93,7 +93,7 @@ export function renderConfigure(container, state, store) {
         const isHF = model?.provider === 'huggingface';
         store.setState({ modelId, apiKey: '', dimensions: null });
         updateDimensionSlider(dimSlider, modelId);
-        renderApiKeyInput(apiKeyWrapper, modelId, store);
+        renderApiKeyInput(apiKeyWrapper, modelId);
         privacyBanner.hidden = !isHF;
         apiKeySection.querySelector('.configure__section-title').textContent =
           isHF ? 'Runtime' : 'API key';
@@ -299,16 +299,17 @@ function buildPrivacyBanner() {
   return banner;
 }
 
-function renderApiKeyInput(container, modelId, store) {
+function renderApiKeyInput(container, modelId) {
   container.innerHTML = '';
   const model = getModelById(modelId);
   if (!model) return;
 
   const adapter = ADAPTERS[model.provider] ?? null;
 
+  // onChange is omitted — the key is read from the DOM at submit time via getApiKey()
+  // Calling store.setState here on every keystroke would re-render the whole view.
   const input = createApiKeyInput({
     provider: model.provider,
-    onChange: key => store.setState({ apiKey: key }),
     onValidate: adapter ? key => adapter.validateApiKey(key) : null,
   });
   container.appendChild(input);

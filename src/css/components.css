@@ -747,6 +747,10 @@
   gap: var(--space-3);
 }
 
+.spinner[hidden] {
+  display: none;
+}
+
 .spinner__ring {
   display: inline-block;
   width: 1.25rem;
