@@ -216,7 +216,7 @@ export function renderExport(container, state, store, toaster = null) {
     const selection = picker?.getSelected();
     if (!selection) return;
 
-    console.log(`[embedgen:export] saving to GitHub — ${selection.owner}/${selection.repo}`);
+    console.log(`[embedgen:export] saving to GitHub — ${selection.owner}/${selection.repo}/${selection.folder}`);
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     saveStatus.hidden = false;
@@ -228,6 +228,7 @@ export function renderExport(container, state, store, toaster = null) {
         token:     getToken(),
         owner:     selection.owner,
         repo:      selection.repo,
+        folder:    selection.folder,
         vectors,
         metadata,
         modelId,

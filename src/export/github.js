@@ -35,10 +35,11 @@ export function buildDirName(modelId, now = new Date()) {
 /**
  * Build the repo-relative paths for all three export files.
  * @param {string} dirName
+ * @param {string} [baseFolder]  Top-level folder inside the repo (default: 'embedgen-data')
  * @returns {{ tensorPath: string, metadataPath: string, configPath: string }}
  */
-export function buildFilePaths(dirName) {
-  const base = `embedgen-data/${dirName}`;
+export function buildFilePaths(dirName, baseFolder = 'embedgen-data') {
+  const base = `${baseFolder.replace(/\/+$/, '')}/${dirName}`;
   return {
     tensorPath:   `${base}/tensors.bytes`,
     metadataPath: `${base}/metadata.tsv`,
@@ -149,6 +150,7 @@ async function updateRef(token, owner, repo, branch, commitSha) {
  * @param {string}   opts.owner        Repo owner (username or org)
  * @param {string}   opts.repo         Repo name
  * @param {string}   opts.branch       Target branch (default: 'main')
+ * @param {string}   [opts.folder]     Base folder inside the repo (default: 'embedgen-data')
  * @param {number[][]} opts.vectors    Embedding vectors [N × D]
  * @param {{ headers: string[], rows: (string|null)[][] }} opts.metadata
  * @param {string}   opts.modelId      e.g. "openai/text-embedding-3-small"
@@ -157,14 +159,14 @@ async function updateRef(token, owner, repo, branch, commitSha) {
  * @returns {Promise<{ configUrl: string, dirName: string }>}
  */
 export async function saveToGitHub({
-  token, owner, repo, branch = 'main',
+  token, owner, repo, branch = 'main', folder = 'embedgen-data',
   vectors, metadata, modelId, modelName, now,
 }) {
   const n = vectors.length;
   const d = vectors[0]?.length ?? 0;
 
   const dirName = buildDirName(modelId, now);
-  const { tensorPath, metadataPath, configPath } = buildFilePaths(dirName);
+  const { tensorPath, metadataPath, configPath } = buildFilePaths(dirName, folder);
 
   // Build raw GitHub URLs for the config so TF Projector can load files
   const tensorUrl   = buildGitHubRawUrl(owner, repo, branch, tensorPath);

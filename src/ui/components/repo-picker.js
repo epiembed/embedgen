@@ -86,6 +86,25 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
   form.appendChild(formRow);
   form.appendChild(formError);
 
+  // ── Folder path input ─────────────────────────────────────────────
+  const folderLabel = document.createElement('label');
+  folderLabel.className = 'repo-picker__label';
+  folderLabel.textContent = 'Folder path';
+  folderLabel.htmlFor = 'repo-picker-folder';
+
+  const folderInput = document.createElement('input');
+  folderInput.type = 'text';
+  folderInput.id = 'repo-picker-folder';
+  folderInput.className = 'repo-picker__folder-input';
+  folderInput.value = 'embedgen-data';
+  folderInput.placeholder = 'embedgen-data';
+  folderInput.autocomplete = 'off';
+  folderInput.setAttribute('aria-label', 'Folder path inside the repository');
+
+  const folderHint = document.createElement('p');
+  folderHint.className = 'repo-picker__folder-hint';
+  folderHint.textContent = 'Files will be saved in a timestamped subfolder inside this path.';
+
   // ── Error area ────────────────────────────────────────────────────
   const errorEl = document.createElement('p');
   errorEl.className = 'repo-picker__error';
@@ -99,6 +118,9 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
   el.appendChild(loadingSpinner.el);
   el.appendChild(select);
   el.appendChild(form);
+  el.appendChild(folderLabel);
+  el.appendChild(folderInput);
+  el.appendChild(folderHint);
   el.appendChild(errorEl);
 
   // ── Internal state ────────────────────────────────────────────────
@@ -215,7 +237,8 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
     const val = select.value;
     if (!val || val === CREATE_VALUE || val === '') return null;
     const [owner, repo] = val.split('/');
-    return { owner, repo };
+    const folder = folderInput.value.trim() || 'embedgen-data';
+    return { owner, repo, folder };
   }
 
   return { el, load, getSelected };

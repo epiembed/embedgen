@@ -974,9 +974,10 @@ Document the chosen approach and any limitations.
 4. Add `VITE_GITHUB_CLIENT_ID` and `VITE_GITHUB_WORKER_URL` as GitHub Actions repository variables.
 5. Update `.github/workflows/deploy.yml` to pass those variables as `env` on the `npm run build` step so Vite bakes them into the bundle.
 
+**Sub-task 6** (added): Add a "Folder path" input to the repo picker so users can choose where in the repo files are saved. Default: `embedgen-data`. A timestamped subfolder is always appended to avoid overwrites. Changes: `repo-picker.js` (UI + `getSelected` returns `folder`), `export/github.js` (`buildFilePaths` and `saveToGitHub` accept `folder`), `export.js` (passes `selection.folder`).
+
 **Verification**:
-- Click "Save to GitHub" on the export view → redirected to GitHub login → redirected back → token exchanged → repo picker loads → file committed successfully.
-- No `client_id=` empty URL in the browser network tab.
+- Click "Save to GitHub" on the export view → redirected to GitHub login → redirected back → token exchanged → repo picker loads with a "Folder path" input → user can type a custom path → file committed to the specified folder → no `client_id=` empty URL in the browser network tab.
 
 ---
 
