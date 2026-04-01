@@ -98,18 +98,18 @@ function renderSlider(wrapper, modelId) {
 
     const tickRow = buildTickRow(ascending);
 
-    const update = () => {
+    const update = (silent = false) => {
       const dim = ascending[Number(range.value)];
       valueEl.textContent = dim.toLocaleString();
       range.setAttribute('aria-valuetext', `${dim.toLocaleString()} dimensions`);
       wrapper.dataset.currentDim = dim;
-      wrapper._onChange?.(dim);
+      if (!silent) wrapper._onChange?.(dim);
     };
 
-    range.addEventListener('input', update);
+    range.addEventListener('input', () => update());
     wrapper.appendChild(range);
     wrapper.appendChild(tickRow);
-    update();
+    update(true); // init: set display without triggering store.setState
 
   } else {
     // ── Any-value mode ───────────────────────────────────────────
@@ -137,13 +137,13 @@ function renderSlider(wrapper, modelId) {
     numInput.value = initial;
     numInput.setAttribute('aria-label', 'Output dimensions (number)');
 
-    const update = dim => {
+    const update = (dim, silent = false) => {
       const clamped = Math.max(1, Math.min(max, Math.round(dim)));
       range.value = clamped;
       numInput.value = clamped;
       valueEl.textContent = clamped.toLocaleString();
       wrapper.dataset.currentDim = clamped;
-      wrapper._onChange?.(clamped);
+      if (!silent) wrapper._onChange?.(clamped);
     };
 
     range.addEventListener('input', () => update(Number(range.value)));
@@ -157,7 +157,7 @@ function renderSlider(wrapper, modelId) {
     row.appendChild(numInput);
     wrapper.appendChild(row);
     wrapper.appendChild(hint);
-    update(initial);
+    update(initial, true); // init: set display without triggering store.setState
   }
 }
 
