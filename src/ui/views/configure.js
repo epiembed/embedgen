@@ -56,7 +56,7 @@ export function renderConfigure(container, state, store) {
   el.appendChild(buildSection('Embedding column', buildColumnSelector(data, selectedColumn, store, previewEl, onColumnChange)));
 
   // ── Section: Metadata columns ───────────────────────────────────
-  el.appendChild(buildSection('Metadata columns', buildMetaSelector(data, selectedColumn, store)));
+  el.appendChild(buildSection('Metadata columns', buildMetaSelector(data, selectedColumn, state.metaColumns, store)));
 
   el.appendChild(buildSection('Data preview', previewEl));
 
@@ -235,7 +235,7 @@ function buildColumnSelector(data, selectedColumn, store, previewEl, onColumnCha
   return wrapper;
 }
 
-function buildMetaSelector(data, selectedColumn, store) {
+function buildMetaSelector(data, selectedColumn, initialMetaColumns, store) {
   const wrapper = document.createElement('div');
   wrapper.className = 'configure__meta-wrap';
   wrapper.setAttribute('role', 'group');
@@ -246,6 +246,7 @@ function buildMetaSelector(data, selectedColumn, store) {
   hint.textContent = 'Select which columns to include as metadata labels in the visualizer.';
   wrapper.appendChild(hint);
 
+  const metaSet = new Set(initialMetaColumns ?? data.headers.filter(h => h !== selectedColumn));
   const checkboxes = [];
   data.headers.forEach(h => {
     const row = document.createElement('label');
@@ -254,7 +255,7 @@ function buildMetaSelector(data, selectedColumn, store) {
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.value = h;
-    cb.checked = h !== selectedColumn; // default: all non-embed cols
+    cb.checked = metaSet.has(h);
     checkboxes.push(cb);
 
     const span = document.createElement('span');
@@ -265,9 +266,7 @@ function buildMetaSelector(data, selectedColumn, store) {
     wrapper.appendChild(row);
   });
 
-  // Initialise state with defaults
-  store.setState({ metaColumns: checkboxes.filter(cb => cb.checked).map(cb => cb.value) });
-
+  // Update store only on user interaction, never during render
   wrapper.addEventListener('change', () => {
     store.setState({ metaColumns: checkboxes.filter(cb => cb.checked).map(cb => cb.value) });
   });

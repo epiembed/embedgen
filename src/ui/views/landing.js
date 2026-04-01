@@ -126,8 +126,12 @@ function handleRaw(file, feedbackEl, store, spinnerEl) {
     preview.appendChild(createDataPreview({ data, selectedColumn: defaultColumn }));
   }
 
+  // Pre-compute default metadata columns so configure.js doesn't need to
+  // call store.setState during its render phase (which would cause infinite recursion).
+  const metaColumns = data.headers.filter(h => h !== defaultColumn);
+
   console.log('[embedgen:landing] navigating to configure');
-  store.setState({ step: 'configure', data, selectedColumn: defaultColumn });
+  store.setState({ step: 'configure', data, selectedColumn: defaultColumn, metaColumns });
 }
 
 function handleProjector(file, feedbackEl, store, spinnerEl) {
