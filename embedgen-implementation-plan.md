@@ -963,6 +963,21 @@ Document the chosen approach and any limitations.
 - Push to `main` → GitHub Actions runs → site is live at `https://{username}.github.io/embedgen/`.
 - All features work on the deployed version.
 
+### Task 8.8 — GitHub OAuth Worker deployment
+
+**What**: Deploy the Cloudflare Worker token-exchange proxy and wire up the OAuth environment variables so the "Save to GitHub" feature works on the live site.
+
+**Sub-tasks**:
+1. Create `worker/index.js` — Cloudflare Worker that receives `{ code, code_verifier }`, exchanges it with the GitHub OAuth endpoint using the stored client secret, and returns `{ access_token }`. Includes CORS headers for the GitHub Pages origin.
+2. Deploy the worker via Wrangler (`npx wrangler deploy worker/index.js --name embedgen-oauth`) and set `GITHUB_CLIENT_ID` + `GITHUB_CLIENT_SECRET` as Worker secrets.
+3. Create a GitHub OAuth App (Settings → Developer settings → OAuth Apps) with the callback URL set to `https://{username}.github.io/embedgen/`.
+4. Add `VITE_GITHUB_CLIENT_ID` and `VITE_GITHUB_WORKER_URL` as GitHub Actions repository variables.
+5. Update `.github/workflows/deploy.yml` to pass those variables as `env` on the `npm run build` step so Vite bakes them into the bundle.
+
+**Verification**:
+- Click "Save to GitHub" on the export view → redirected to GitHub login → redirected back → token exchanged → repo picker loads → file committed successfully.
+- No `client_id=` empty URL in the browser network tab.
+
 ---
 
 ## Phase Summary
