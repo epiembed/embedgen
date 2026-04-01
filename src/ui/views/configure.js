@@ -81,6 +81,7 @@ export function renderConfigure(container, state, store) {
 
   // Model selector lives in a wrapper so it can be rebuilt on column change
   const modelSelectorWrapper = document.createElement('div');
+  let modelSelector;
 
   function buildModelSelector(allowedInputTypes) {
     modelSelectorWrapper.innerHTML = '';
@@ -100,6 +101,7 @@ export function renderConfigure(container, state, store) {
       },
     });
     modelSelectorWrapper.appendChild(sel);
+    modelSelector = sel;
     return sel;
   }
 
