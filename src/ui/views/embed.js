@@ -86,7 +86,10 @@ export function renderEmbed(container, state, store, toaster = null) {
 
   // ── Orchestration ────────────────────────────────────────────────
   async function run() {
+    console.log(`[embedgen:embed] run — model: "${modelId}", column: "${selectedColumn}", dimensions: ${dimensions}`);
+
     if (!model || !adapter) {
+      console.error(`[embedgen:embed] no adapter for provider "${model?.provider}"`);
       bar.el.hidden = false;
       bar.setError(`No adapter available for provider "${model?.provider}".`);
       return;
@@ -97,6 +100,8 @@ export function renderEmbed(container, state, store, toaster = null) {
       .map(row => row[colIndex])
       .map(v => (v === null || v === undefined) ? '' : String(v));
 
+    console.log(`[embedgen:embed] ${texts.length} texts extracted from column "${selectedColumn}"`);
+
     const batches = createBatches(
       texts,
       model.maxBatchSize,
@@ -104,6 +109,7 @@ export function renderEmbed(container, state, store, toaster = null) {
     );
 
     const totalBatches = batches.length;
+    console.log(`[embedgen:embed] ${totalBatches} batch(es) created (maxBatchSize: ${model.maxBatchSize})`);
     const allVectors = [];
 
     for (let i = 0; i < totalBatches; i++) {
@@ -127,6 +133,7 @@ export function renderEmbed(container, state, store, toaster = null) {
             // Pass download progress handler on the first batch only
             if (i === 0) {
               options.onProgress = info => {
+                console.log('[embedgen:embed] HF model download progress', info);
                 downloadProgress?.onProgress(info);
               };
             }
@@ -136,7 +143,9 @@ export function renderEmbed(container, state, store, toaster = null) {
             if (model.provider === 'gemini') options.outputDimensionality = dimensions;
           }
 
+          console.log(`[embedgen:embed] batch ${i + 1}/${totalBatches} — sending ${batch.length} items (attempt ${attempt + 1})`);
           vectors = await adapter.embed(batch, model.name, apiKey, options);
+          console.log(`[embedgen:embed] batch ${i + 1} done — got ${vectors.length} vectors, dim: ${vectors[0]?.length}`);
 
           // After first HF batch succeeds, hide download UI and show progress bar
           if (isHuggingFace && i === 0) {
@@ -149,6 +158,7 @@ export function renderEmbed(container, state, store, toaster = null) {
             const waitMs = err.retryAfter
               ? err.retryAfter * 1000
               : BASE_BACKOFF_MS * Math.pow(2, attempt);
+            console.warn(`[embedgen:embed] rate limit — waiting ${waitMs}ms before retry (attempt ${attempt + 1}/${MAX_RETRIES})`);
             const msg = formatEmbedError(err, { provider: model.provider, attempt: attempt + 1, maxRetries: MAX_RETRIES });
             bar.el.hidden = false;
             bar.setError(msg);
@@ -157,6 +167,7 @@ export function renderEmbed(container, state, store, toaster = null) {
             bar.clearError();
             attempt++;
           } else {
+            console.error('[embedgen:embed] fatal error', err);
             downloadProgress?.complete();
             bar.el.hidden = false;
             const isDownloadErr = isHuggingFace && i === 0;
@@ -176,6 +187,7 @@ export function renderEmbed(container, state, store, toaster = null) {
 
     if (cancelled) return;
 
+    console.log(`[embedgen:embed] complete — ${allVectors.length} vectors, dim: ${allVectors[0]?.length}`);
     bar.update({ pct: 1, label: `Done — ${allVectors.length} vectors generated` });
 
     const metaHeaders = (metaColumns ?? []).filter(c => c !== selectedColumn);
@@ -183,6 +195,7 @@ export function renderEmbed(container, state, store, toaster = null) {
       metaHeaders.map(h => row[data.headers.indexOf(h)] ?? '')
     );
 
+    console.log(`[embedgen:embed] metadata columns: [${metaHeaders.join(', ')}] — navigating to export`);
     store.setState({
       step: 'export',
       embeddings: {

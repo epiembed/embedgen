@@ -24,9 +24,10 @@ export function createRouter(store, container) {
   function render(state) {
     const renderFn = views.get(state.step);
     if (!renderFn) {
-      console.warn(`[router] No view registered for step: "${state.step}"`);
+      console.warn(`[embedgen:router] No view registered for step: "${state.step}"`);
       return;
     }
+    console.log(`[embedgen:router] → step: "${state.step}"`);
     container.innerHTML = '';
     renderFn(container, state);
     // Move focus to the new view's heading so screen readers announce the step change

@@ -22,7 +22,9 @@ export function createStore(initialState) {
   }
 
   function setState(partial) {
+    console.log('[embedgen:state] setState', partial);
     state = { ...state, ...partial };
+    console.log('[embedgen:state] new state', state);
     for (const listener of listeners) {
       listener(state);
     }

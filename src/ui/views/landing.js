@@ -90,12 +90,15 @@ export function renderLanding(container, _state, store) {
 // ── Handlers ────────────────────────────────────────────────────────
 
 function handleRaw(file, feedbackEl, store, spinnerEl) {
+  console.log(`[embedgen:landing] handleRaw — file: "${file.fileName}", type: "${file.type}"`);
   clearFeedback(feedbackEl);
   if (spinnerEl) spinnerEl.hidden = false;
   let data;
   try {
     data = parseRaw(file);
+    console.log(`[embedgen:landing] parsed — ${data.rows.length} rows × ${data.headers.length} columns`, data.headers);
   } catch (err) {
+    console.error('[embedgen:landing] parse error', err);
     if (spinnerEl) spinnerEl.hidden = true;
     showError(feedbackEl, formatParseError(err, file.type));
     return;
@@ -105,7 +108,9 @@ function handleRaw(file, feedbackEl, store, spinnerEl) {
 
   // Default: embed the second column if it exists, else the first
   const defaultColumn = data.headers[1] ?? data.headers[0] ?? null;
+  console.log(`[embedgen:landing] default column: "${defaultColumn}"`);
   const result = validate(data, defaultColumn);
+  console.log('[embedgen:landing] validation result', result);
 
   if (!result.valid) {
     showError(feedbackEl, result.errors.join(' · '));
@@ -121,21 +126,26 @@ function handleRaw(file, feedbackEl, store, spinnerEl) {
     preview.appendChild(createDataPreview({ data, selectedColumn: defaultColumn }));
   }
 
+  console.log('[embedgen:landing] navigating to configure');
   store.setState({ step: 'configure', data, selectedColumn: defaultColumn });
 }
 
 function handleProjector(file, feedbackEl, store, spinnerEl) {
+  console.log(`[embedgen:landing] handleProjector — file: "${file.fileName}"`);
   clearFeedback(feedbackEl);
   if (spinnerEl) spinnerEl.hidden = false;
   let result;
   try {
     result = parseProjector(file.content);
+    console.log('[embedgen:landing] projector parsed', result);
   } catch (err) {
+    console.error('[embedgen:landing] projector parse error', err);
     showError(feedbackEl, formatParseError(err, 'projector'));
     return;
   } finally {
     if (spinnerEl) spinnerEl.hidden = true;
   }
+  console.log('[embedgen:landing] navigating to export (projector mode)');
   store.setState({ step: 'export', projectorData: result });
 }
 

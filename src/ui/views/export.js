@@ -32,20 +32,23 @@ export async function handleOAuthCallback(store) {
   // Restore state that was saved before the OAuth redirect
   const saved = sessionStorage.getItem(STATE_KEY);
   if (saved) {
+    console.log('[embedgen:export] restoring pre-OAuth state from sessionStorage');
     sessionStorage.removeItem(STATE_KEY);
     try { store.setState(JSON.parse(saved)); } catch { /* ignore */ }
   }
 
   if (!window.location.search.includes('code=')) return;
 
+  console.log('[embedgen:export] OAuth callback detected — exchanging code for token');
   try {
     await handleCallback(WORKER_URL);
+    console.log('[embedgen:export] OAuth token obtained successfully');
     // Ensure user lands on export step after login
     if (store.getState().embeddings) {
       store.setState({ step: 'export' });
     }
   } catch (err) {
-    console.error('OAuth callback error:', err);
+    console.error('[embedgen:export] OAuth callback error:', err);
   }
 }
 
@@ -98,6 +101,7 @@ export function renderExport(container, state, store, toaster = null) {
   downloadBtn.className = 'export-view__download-btn btn btn--primary';
   downloadBtn.textContent = 'Download to Disk';
   downloadBtn.addEventListener('click', () => {
+    console.log(`[embedgen:export] building ZIP — ${n} vectors × ${d} dims`);
     const tensorsTSV  = tensorToTSV(vectors);
     const metadataTSV = metaToTSV(metadata.headers, metadata.rows);
     const config = buildConfig({
@@ -107,6 +111,7 @@ export function renderExport(container, state, store, toaster = null) {
       metadataPath: metadata.headers.length ? 'metadata.tsv' : undefined,
     });
     const zipBytes = buildZip({ tensorsTSV, metadataTSV, config });
+    console.log(`[embedgen:export] ZIP built (${(zipBytes.byteLength / 1024).toFixed(1)} KB) — triggering download`);
     triggerDownload(new Blob([zipBytes], { type: 'application/zip' }), 'embedgen-export.zip');
   });
   el.appendChild(downloadBtn);
@@ -211,6 +216,7 @@ export function renderExport(container, state, store, toaster = null) {
     const selection = picker?.getSelected();
     if (!selection) return;
 
+    console.log(`[embedgen:export] saving to GitHub — ${selection.owner}/${selection.repo}`);
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     saveStatus.hidden = false;
@@ -228,8 +234,10 @@ export function renderExport(container, state, store, toaster = null) {
         modelName: model?.displayName ?? modelId,
       });
 
+      console.log('[embedgen:export] GitHub save succeeded — configUrl:', configUrl);
       store.setState({ configUrl, step: 'visualize' });
     } catch (err) {
+      console.error('[embedgen:export] GitHub save failed', err);
       saveStatus.className = 'export-view__save-status export-view__save-status--error';
       const ghMsg = formatGitHubError(err);
       saveStatus.textContent = ghMsg;
