@@ -56,15 +56,21 @@ export function renderVisualize(container, state, store) {
     linkInput.readOnly = true;
     linkInput.className = 'visualize-view__link-input';
     linkInput.value = buildShareableLink(configUrl);
+    linkInput.setAttribute('aria-label', 'Shareable visualization link');
 
     const copyBtn = document.createElement('button');
     copyBtn.type = 'button';
     copyBtn.className = 'btn btn--secondary';
     copyBtn.textContent = 'Copy';
+    copyBtn.setAttribute('aria-label', 'Copy shareable link to clipboard');
     copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(linkInput.value).then(() => {
         copyBtn.textContent = 'Copied!';
-        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 2000);
+        copyBtn.setAttribute('aria-label', 'Link copied to clipboard');
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+          copyBtn.setAttribute('aria-label', 'Copy shareable link to clipboard');
+        }, 2000);
       });
     });
 

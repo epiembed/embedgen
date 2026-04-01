@@ -14,6 +14,7 @@ import { adapter as voyageAdapter } from '../../embeddings/voyage.js';
 import { adapter as geminiAdapter } from '../../embeddings/gemini.js';
 import { adapter as huggingfaceAdapter } from '../../embeddings/huggingface.js';
 import { RateLimitError } from '../../embeddings/provider.js';
+import { formatEmbedError, formatDownloadError } from '../errors.js';
 
 const ADAPTERS = {
   openai:      openaiAdapter,
@@ -30,7 +31,7 @@ const BASE_BACKOFF_MS = 2000;
  * @param {object} state
  * @param {object} store
  */
-export function renderEmbed(container, state, store) {
+export function renderEmbed(container, state, store, toaster = null) {
   const { data, selectedColumn, modelId, apiKey, dimensions, metaColumns } = state;
   const model = getModelById(modelId);
   const adapter = model ? ADAPTERS[model.provider] : null;
@@ -148,16 +149,22 @@ export function renderEmbed(container, state, store) {
             const waitMs = err.retryAfter
               ? err.retryAfter * 1000
               : BASE_BACKOFF_MS * Math.pow(2, attempt);
-            const waitSec = Math.round(waitMs / 1000);
+            const msg = formatEmbedError(err, { provider: model.provider, attempt: attempt + 1, maxRetries: MAX_RETRIES });
             bar.el.hidden = false;
-            bar.setError(`Rate limited — retrying in ${waitSec} s… (attempt ${attempt + 1}/${MAX_RETRIES})`);
+            bar.setError(msg);
+            toaster?.show(msg, { type: 'warning', timeout: waitMs });
             await sleep(waitMs);
             bar.clearError();
             attempt++;
           } else {
             downloadProgress?.complete();
             bar.el.hidden = false;
-            bar.setError(`Error: ${err.message}`);
+            const isDownloadErr = isHuggingFace && i === 0;
+            const msg = isDownloadErr
+              ? formatDownloadError(err, model.name)
+              : formatEmbedError(err, { provider: model.provider });
+            bar.setError(msg);
+            toaster?.show(msg, { type: 'error', timeout: 0 });
             retryBtn.hidden = false;
             return;
           }

@@ -13,6 +13,8 @@
  *   picker.getSelected();    // → { owner, repo } | null
  */
 
+import { createSpinner } from './spinner.js';
+
 const CREATE_VALUE = '__create__';
 
 /**
@@ -52,11 +54,13 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
   nameInput.className = 'repo-picker__name-input';
   nameInput.placeholder = 'Repository name';
   nameInput.autocomplete = 'off';
+  nameInput.setAttribute('aria-label', 'Repository name');
 
   const descInput = document.createElement('input');
   descInput.type = 'text';
   descInput.className = 'repo-picker__desc-input';
   descInput.placeholder = 'Description (optional)';
+  descInput.setAttribute('aria-label', 'Repository description (optional)');
 
   const createBtn = document.createElement('button');
   createBtn.type = 'button';
@@ -87,7 +91,12 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
   errorEl.className = 'repo-picker__error';
   errorEl.hidden = true;
 
+  const loadingSpinner = createSpinner('Loading repos…');
+  loadingSpinner.el.className += ' repo-picker__spinner';
+  loadingSpinner.el.hidden = true;
+
   el.appendChild(label);
+  el.appendChild(loadingSpinner.el);
   el.appendChild(select);
   el.appendChild(form);
   el.appendChild(errorEl);
@@ -187,7 +196,8 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
   // ── Public API ────────────────────────────────────────────────────
   async function load() {
     errorEl.hidden = true;
-    select.disabled = true;
+    select.hidden = true;
+    loadingSpinner.el.hidden = false;
     try {
       repos = await listRepos(token);
       populateSelect(repos);
@@ -195,6 +205,9 @@ export function createRepoPicker({ token, listRepos, createRepo, onChange }) {
       select.innerHTML = '';
       errorEl.textContent = `Could not load repos: ${err.message}`;
       errorEl.hidden = false;
+    } finally {
+      loadingSpinner.el.hidden = true;
+      select.hidden = false;
     }
   }
 

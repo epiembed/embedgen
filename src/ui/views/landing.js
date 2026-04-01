@@ -10,6 +10,8 @@ import { parse as parseProjector } from '../../data/parsers/projector.js';
 import { run as validate } from '../../data/validators.js';
 import { createFileUpload } from '../components/file-upload.js';
 import { createDataPreview } from '../components/data-preview.js';
+import { createSpinner } from '../components/spinner.js';
+import { formatParseError } from '../errors.js';
 
 /**
  * Auto-detect and parse raw data (CSV/TSV or JSON).
@@ -52,14 +54,14 @@ export function renderLanding(container, _state, store) {
     title: 'Upload Raw Data',
     description: "CSV, TSV, or JSON \u2014 we'll generate embeddings for you.",
     label: 'Drop a CSV, TSV, or JSON file here, or click to browse',
-    onFile: file => handleRaw(file, feedbackEl, store),
+    onFile: file => handleRaw(file, feedbackEl, store, spinner.el),
   }));
 
   cards.appendChild(buildCard({
     title: 'Upload TF Projector Data',
     description: 'Already have tensors? Load a tensor TSV (and optional metadata TSV).',
     label: 'Drop a tensor TSV file here, or click to browse',
-    onFile: file => handleProjector(file, feedbackEl, store),
+    onFile: file => handleProjector(file, feedbackEl, store, spinner.el),
   }));
 
   el.appendChild(cards);
@@ -67,7 +69,15 @@ export function renderLanding(container, _state, store) {
   // ── Feedback (errors / warnings) ───────────────────────────────
   const feedbackEl = document.createElement('div');
   feedbackEl.className = 'landing__feedback';
+  feedbackEl.setAttribute('aria-live', 'polite');
+  feedbackEl.setAttribute('aria-atomic', 'true');
   el.appendChild(feedbackEl);
+
+  // ── Parse loading spinner ──────────────────────────────────────
+  const spinner = createSpinner('Parsing file…');
+  spinner.el.className += ' landing__spinner';
+  spinner.el.hidden = true;
+  el.appendChild(spinner.el);
 
   // ── Data preview (shown after successful raw parse) ────────────
   const previewEl = document.createElement('div');
@@ -79,14 +89,18 @@ export function renderLanding(container, _state, store) {
 
 // ── Handlers ────────────────────────────────────────────────────────
 
-function handleRaw(file, feedbackEl, store) {
+function handleRaw(file, feedbackEl, store, spinnerEl) {
   clearFeedback(feedbackEl);
+  if (spinnerEl) spinnerEl.hidden = false;
   let data;
   try {
     data = parseRaw(file);
   } catch (err) {
-    showError(feedbackEl, `Parse error: ${err.message}`);
+    if (spinnerEl) spinnerEl.hidden = true;
+    showError(feedbackEl, formatParseError(err, file.type));
     return;
+  } finally {
+    if (spinnerEl) spinnerEl.hidden = true;
   }
 
   // Default: embed the second column if it exists, else the first
@@ -110,14 +124,17 @@ function handleRaw(file, feedbackEl, store) {
   store.setState({ step: 'configure', data, selectedColumn: defaultColumn });
 }
 
-function handleProjector(file, feedbackEl, store) {
+function handleProjector(file, feedbackEl, store, spinnerEl) {
   clearFeedback(feedbackEl);
+  if (spinnerEl) spinnerEl.hidden = false;
   let result;
   try {
     result = parseProjector(file.content);
   } catch (err) {
-    showError(feedbackEl, `Parse error: ${err.message}`);
+    showError(feedbackEl, formatParseError(err, 'projector'));
     return;
+  } finally {
+    if (spinnerEl) spinnerEl.hidden = true;
   }
   store.setState({ step: 'export', projectorData: result });
 }

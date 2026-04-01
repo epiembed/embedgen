@@ -35,6 +35,7 @@ export function renderConfigure(container, state, store) {
   const back = document.createElement('button');
   back.className = 'configure__back';
   back.textContent = '← Back';
+  back.setAttribute('aria-label', 'Back to upload');
   back.addEventListener('click', () => store.setState({ step: 'landing' }));
   el.appendChild(back);
 
@@ -114,6 +115,7 @@ export function renderConfigure(container, state, store) {
   imageModeNotice.className = 'configure__image-mode-notice';
   imageModeNotice.textContent = 'Image column detected — showing multimodal models only. OpenAI models are text-only and are hidden.';
   imageModeNotice.hidden = !isImageColumn(selectedColumn);
+  imageModeNotice.setAttribute('aria-live', 'polite');
 
   el.appendChild(buildSection('Model', modelSelectorWrapper));
   el.appendChild(imageModeNotice);
@@ -236,6 +238,8 @@ function buildColumnSelector(data, selectedColumn, store, previewEl, onColumnCha
 function buildMetaSelector(data, selectedColumn, store) {
   const wrapper = document.createElement('div');
   wrapper.className = 'configure__meta-wrap';
+  wrapper.setAttribute('role', 'group');
+  wrapper.setAttribute('aria-label', 'Metadata columns');
 
   const hint = document.createElement('p');
   hint.className = 'configure__meta-hint';

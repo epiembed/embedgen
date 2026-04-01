@@ -19,6 +19,10 @@ export function createProgressBar({ onCancel } = {}) {
 
   const track = document.createElement('div');
   track.className = 'progress-bar__track';
+  track.setAttribute('role', 'progressbar');
+  track.setAttribute('aria-valuemin', '0');
+  track.setAttribute('aria-valuemax', '100');
+  track.setAttribute('aria-valuenow', '0');
 
   const fill = document.createElement('div');
   fill.className = 'progress-bar__fill';
@@ -27,10 +31,14 @@ export function createProgressBar({ onCancel } = {}) {
 
   const label = document.createElement('p');
   label.className = 'progress-bar__label';
+  label.setAttribute('aria-live', 'polite');
+  label.setAttribute('aria-atomic', 'true');
 
   const errorEl = document.createElement('p');
   errorEl.className = 'progress-bar__error';
   errorEl.hidden = true;
+  errorEl.setAttribute('aria-live', 'assertive');
+  errorEl.setAttribute('aria-atomic', 'true');
 
   el.appendChild(track);
   el.appendChild(label);
@@ -48,6 +56,7 @@ export function createProgressBar({ onCancel } = {}) {
   function update({ pct, label: text = '' }) {
     const clamped = Math.max(0, Math.min(1, pct));
     fill.style.width = `${(clamped * 100).toFixed(1)}%`;
+    track.setAttribute('aria-valuenow', Math.round(clamped * 100));
     label.textContent = text;
   }
 

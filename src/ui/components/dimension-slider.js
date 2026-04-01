@@ -94,12 +94,14 @@ function renderSlider(wrapper, modelId) {
     range.max = ascending.length - 1;
     range.step = 1;
     range.value = initialIndex;
+    range.setAttribute('aria-label', 'Output dimensions');
 
     const tickRow = buildTickRow(ascending);
 
     const update = () => {
       const dim = ascending[Number(range.value)];
       valueEl.textContent = dim.toLocaleString();
+      range.setAttribute('aria-valuetext', `${dim.toLocaleString()} dimensions`);
       wrapper.dataset.currentDim = dim;
       wrapper._onChange?.(dim);
     };
@@ -125,6 +127,7 @@ function renderSlider(wrapper, modelId) {
     range.max = max;
     range.step = 64;
     range.value = initial;
+    range.setAttribute('aria-label', 'Output dimensions');
 
     const numInput = document.createElement('input');
     numInput.type = 'number';
@@ -132,6 +135,7 @@ function renderSlider(wrapper, modelId) {
     numInput.min = 1;
     numInput.max = max;
     numInput.value = initial;
+    numInput.setAttribute('aria-label', 'Output dimensions (number)');
 
     const update = dim => {
       const clamped = Math.max(1, Math.min(max, Math.round(dim)));
@@ -164,6 +168,7 @@ function buildTickRow(ascendingStops) {
     const tick = document.createElement('span');
     tick.className = 'dimension-slider__tick';
     tick.textContent = stop >= 1000 ? `${stop / 1000}k` : String(stop);
+    tick.setAttribute('aria-hidden', 'true');
     row.appendChild(tick);
   }
   return row;

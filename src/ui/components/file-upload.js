@@ -38,13 +38,17 @@ function readAsText(file) {
  * @param {File} file
  * @param {function} onFile
  * @param {function} onError
+ * @param {function} [setLoading]  called with true/false around the read
  */
-async function handleFile(file, onFile, onError) {
+async function handleFile(file, onFile, onError, setLoading) {
+  setLoading?.(true);
   try {
     const content = await readAsText(file);
     onFile({ fileName: file.name, content, type: detectType(file.name) });
   } catch (err) {
     onError(err.message);
+  } finally {
+    setLoading?.(false);
   }
 }
 
@@ -56,6 +60,13 @@ async function handleFile(file, onFile, onError) {
 export function createFileUpload({ onFile, onError = () => {}, label = 'Drop a file here or click to browse' }) {
   const wrapper = document.createElement('div');
   wrapper.className = 'file-upload';
+
+  function setLoading(on) {
+    wrapper.classList.toggle('file-upload--loading', on);
+    zone.setAttribute('aria-busy', on ? 'true' : 'false');
+    text.textContent = on ? 'Reading file…' : label;
+    icon.textContent = on ? '…' : '↑';
+  }
 
   const input = document.createElement('input');
   input.type = 'file';
@@ -101,7 +112,7 @@ export function createFileUpload({ onFile, onError = () => {}, label = 'Drop a f
   // Native file picker selection
   input.addEventListener('change', () => {
     const file = input.files[0];
-    if (file) handleFile(file, onFile, onError);
+    if (file) handleFile(file, onFile, onError, setLoading);
     input.value = '';
   });
 
@@ -121,7 +132,7 @@ export function createFileUpload({ onFile, onError = () => {}, label = 'Drop a f
     e.preventDefault();
     zone.classList.remove('file-upload__zone--drag-over');
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file, onFile, onError);
+    if (file) handleFile(file, onFile, onError, setLoading);
   });
 
   return wrapper;

@@ -76,6 +76,7 @@ function render(wrapper, data, selectedColumn, maxRows, imageColumns = new Set()
   const headerRow = document.createElement('tr');
   headers.forEach((h, i) => {
     const th = document.createElement('th');
+    th.scope = 'col';
     th.textContent = h;
     if (i === selectedIndex) th.classList.add('data-preview__cell--selected');
     headerRow.appendChild(th);

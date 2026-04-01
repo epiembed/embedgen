@@ -29,6 +29,12 @@ export function createRouter(store, container) {
     }
     container.innerHTML = '';
     renderFn(container, state);
+    // Move focus to the new view's heading so screen readers announce the step change
+    const heading = container.querySelector('h1');
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: false });
+    }
   }
 
   function start() {

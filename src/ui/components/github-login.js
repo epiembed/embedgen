@@ -31,6 +31,8 @@ export function createGitHubLogin({
 }) {
   const el = document.createElement('div');
   el.className = 'github-login';
+  el.setAttribute('aria-live', 'polite');
+  el.setAttribute('aria-atomic', 'true');
 
   // ── Logged-out state ──────────────────────────────────────────────
   const loggedOut = document.createElement('div');

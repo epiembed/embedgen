@@ -12,6 +12,7 @@ import { buildConfig } from '../../export/config.js';
 import { buildZip, triggerDownload } from '../../export/download.js';
 import { saveToGitHub } from '../../export/github.js';
 import { initiateLogin, getToken, logout, handleCallback } from '../../github/auth.js';
+import { formatGitHubError } from '../errors.js';
 import { getUser, listRepos, createRepo } from '../../github/api.js';
 import { createGitHubLogin } from '../components/github-login.js';
 import { createRepoPicker } from '../components/repo-picker.js';
@@ -53,7 +54,7 @@ export async function handleOAuthCallback(store) {
  * @param {object} state
  * @param {object} store
  */
-export function renderExport(container, state, store) {
+export function renderExport(container, state, store, toaster = null) {
   const { embeddings, modelId } = state;
   const { vectors, metadata } = embeddings ?? {};
   const model = getModelById(modelId);
@@ -148,6 +149,8 @@ export function renderExport(container, state, store) {
   const saveStatus = document.createElement('div');
   saveStatus.className = 'export-view__save-status';
   saveStatus.hidden = true;
+  saveStatus.setAttribute('aria-live', 'assertive');
+  saveStatus.setAttribute('aria-atomic', 'true');
   ghSection.appendChild(saveStatus);
 
   // Save button
@@ -228,7 +231,9 @@ export function renderExport(container, state, store) {
       store.setState({ configUrl, step: 'visualize' });
     } catch (err) {
       saveStatus.className = 'export-view__save-status export-view__save-status--error';
-      saveStatus.textContent = `Save failed: ${err.message}`;
+      const ghMsg = formatGitHubError(err);
+      saveStatus.textContent = ghMsg;
+      toaster?.show(ghMsg, { type: 'error', timeout: 0 });
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save to GitHub';
     }

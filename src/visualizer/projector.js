@@ -60,6 +60,23 @@ function _buildIframeMode(el, configUrl) {
 
   el.appendChild(toolbar);
 
+  // Loading overlay — shown until iframe fires load
+  const loadingOverlay = document.createElement('div');
+  loadingOverlay.className = 'projector-embed__loading';
+  loadingOverlay.setAttribute('aria-live', 'polite');
+
+  const loadingSpinner = document.createElement('span');
+  loadingSpinner.className = 'spinner__ring';
+  loadingSpinner.setAttribute('aria-hidden', 'true');
+
+  const loadingText = document.createElement('span');
+  loadingText.className = 'spinner__label';
+  loadingText.textContent = 'Loading TF Projector…';
+
+  loadingOverlay.appendChild(loadingSpinner);
+  loadingOverlay.appendChild(loadingText);
+  el.appendChild(loadingOverlay);
+
   // iframe
   const iframe = document.createElement('iframe');
   iframe.className = 'projector-embed__iframe';
@@ -68,6 +85,10 @@ function _buildIframeMode(el, configUrl) {
   iframe.allow = 'accelerometer; webgl';
   // No sandbox — projector needs scripts, popups, and same-origin storage
   iframe.setAttribute('loading', 'lazy');
+
+  iframe.addEventListener('load', () => {
+    loadingOverlay.hidden = true;
+  }, { once: true });
 
   el.appendChild(iframe);
 }

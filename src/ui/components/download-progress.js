@@ -34,6 +34,8 @@ export function createDownloadProgress() {
 
   const fileList = document.createElement('div');
   fileList.className = 'download-progress__files';
+  fileList.setAttribute('aria-live', 'polite');
+  fileList.setAttribute('aria-atomic', 'false');
   el.appendChild(fileList);
 
   // Track per-file state

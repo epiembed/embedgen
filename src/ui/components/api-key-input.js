@@ -91,6 +91,8 @@ export function createApiKeyInput({ provider, onChange = () => {}, onValidate = 
   // Status message
   const statusEl = document.createElement('p');
   statusEl.className = 'api-key-input__status';
+  statusEl.setAttribute('aria-live', 'polite');
+  statusEl.setAttribute('aria-atomic', 'true');
 
   wrapper.appendChild(label);
   wrapper.appendChild(row);
