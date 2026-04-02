@@ -58,10 +58,11 @@ export function initiateLogin(clientId, redirectUri) {
  * stores the token in sessionStorage, and cleans the URL.
  *
  * @param {string} workerUrl  — URL of the token-exchange Cloudflare Worker.
+ * @param {string} clientId   — GitHub OAuth App client ID.
  * @returns {Promise<string|null>}  The access token, or null if no callback params.
  * @throws {Error} On state mismatch or network/server errors.
  */
-export async function handleCallback(workerUrl) {
+export async function handleCallback(workerUrl, clientId) {
   const params   = new URLSearchParams(window.location.search);
   const code     = params.get('code');
   const state    = params.get('state');
@@ -79,7 +80,7 @@ export async function handleCallback(workerUrl) {
   const response = await fetch(workerUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ code, client_id: clientId }),
   });
 
   if (!response.ok) {

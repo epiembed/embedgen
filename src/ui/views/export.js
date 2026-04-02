@@ -41,7 +41,7 @@ export async function handleOAuthCallback(store) {
 
   console.log('[embedgen:export] OAuth callback detected — exchanging code for token');
   try {
-    await handleCallback(WORKER_URL);
+    await handleCallback(WORKER_URL, CLIENT_ID);
     console.log('[embedgen:export] OAuth token obtained successfully');
     // Ensure user lands on export step after login
     if (store.getState().embeddings) {
