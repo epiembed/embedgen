@@ -77,6 +77,7 @@ describe('initiateLogin', () => {
 
 describe('handleCallback', () => {
   const WORKER_URL = 'https://worker.example.com/token';
+  const CLIENT_ID  = 'test-client-id';
 
   beforeEach(() => {
     sessionStorage.clear();
@@ -103,13 +104,13 @@ describe('handleCallback', () => {
       writable: true,
       value: { href: 'https://app.example.com/', search: '' },
     });
-    const result = await handleCallback(WORKER_URL);
+    const result = await handleCallback(WORKER_URL, CLIENT_ID);
     expect(result).toBeNull();
   });
 
   it('throws on state mismatch', async () => {
     sessionStorage.setItem('gh_oauth_state', 'different-state');
-    await expect(handleCallback(WORKER_URL)).rejects.toThrow('state mismatch');
+    await expect(handleCallback(WORKER_URL, CLIENT_ID)).rejects.toThrow('state mismatch');
   });
 
   it('exchanges code via POST to workerUrl', async () => {
@@ -119,13 +120,13 @@ describe('handleCallback', () => {
       json: async () => ({ access_token: 'ghp_token' }),
     });
 
-    await handleCallback(WORKER_URL);
+    await handleCallback(WORKER_URL, CLIENT_ID);
 
     expect(fetch).toHaveBeenCalledWith(
       WORKER_URL,
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ code: 'abc123' }),
+        body: JSON.stringify({ code: 'abc123', client_id: 'test-client-id' }),
       }),
     );
   });
@@ -137,7 +138,7 @@ describe('handleCallback', () => {
       json: async () => ({ access_token: 'ghp_token' }),
     });
 
-    const token = await handleCallback(WORKER_URL);
+    const token = await handleCallback(WORKER_URL, CLIENT_ID);
     expect(token).toBe('ghp_token');
     expect(sessionStorage.getItem('gh_access_token')).toBe('ghp_token');
   });
@@ -145,7 +146,7 @@ describe('handleCallback', () => {
   it('throws when worker returns non-ok response', async () => {
     sessionStorage.setItem('gh_oauth_state', 'mystate');
     fetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Server Error' });
-    await expect(handleCallback(WORKER_URL)).rejects.toThrow('Token exchange failed');
+    await expect(handleCallback(WORKER_URL, CLIENT_ID)).rejects.toThrow('Token exchange failed');
   });
 });
 
