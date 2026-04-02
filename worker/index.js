@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker — GitHub OAuth token exchange proxy.
  *
- * Receives { code, code_verifier } from the browser,
+ * Receives { code } from the browser,
  * exchanges it for an access token using the stored client secret,
  * and returns { access_token }.
  *
@@ -36,16 +36,15 @@ export default {
       return new Response('Invalid JSON', { status: 400 });
     }
 
-    const { code, code_verifier } = body;
-    if (!code || !code_verifier) {
-      return new Response('Missing code or code_verifier', { status: 400 });
+    const { code } = body;
+    if (!code) {
+      return new Response('Missing code', { status: 400 });
     }
 
     const params = new URLSearchParams({
       client_id:     env.GITHUB_CLIENT_ID,
       client_secret: env.GITHUB_CLIENT_SECRET,
       code,
-      code_verifier,
     });
 
     const ghResponse = await fetch('https://github.com/login/oauth/access_token', {

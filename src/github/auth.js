@@ -1,39 +1,21 @@
 /**
- * GitHub OAuth PKCE flow.
+ * GitHub OAuth flow (without PKCE — GitHub OAuth Apps do not support it).
+ *
+ * Security is provided by:
+ *   - CSRF state token verified on callback
+ *   - Client secret held securely on the Cloudflare Worker
  *
  * Flow:
- *   1. initiateLogin()  — generate verifier + state, redirect to GitHub.
+ *   1. initiateLogin()  — generate state, redirect to GitHub.
  *   2. handleCallback() — on redirect back, verify state, exchange code for token via Worker.
  *   3. getToken()       — read stored token.
  *   4. logout()         — clear stored token.
  */
 
-const SESSION_KEY_VERIFIER = 'gh_pkce_verifier';
-const SESSION_KEY_STATE    = 'gh_pkce_state';
-const SESSION_KEY_TOKEN    = 'gh_access_token';
+const SESSION_KEY_STATE = 'gh_oauth_state';
+const SESSION_KEY_TOKEN = 'gh_access_token';
 
-// ── Crypto helpers ────────────────────────────────────────────────────
-
-/**
- * Generate a cryptographically random 64-char base64url string (code verifier).
- * @returns {string}
- */
-export function generateCodeVerifier() {
-  const bytes = new Uint8Array(48); // 48 bytes → 64 base64url chars
-  crypto.getRandomValues(bytes);
-  return base64url(bytes);
-}
-
-/**
- * Derive the PKCE code challenge from a verifier (SHA-256, base64url).
- * @param {string} verifier
- * @returns {Promise<string>}
- */
-export async function generateCodeChallenge(verifier) {
-  const encoded = new TextEncoder().encode(verifier);
-  const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
-  return base64url(new Uint8Array(hashBuf));
-}
+// ── Helpers ──────────────────────────────────────────────────────────
 
 /**
  * Generate a random CSRF state token.
@@ -48,27 +30,22 @@ export function generateState() {
 // ── OAuth flow ────────────────────────────────────────────────────────
 
 /**
- * Start the GitHub OAuth PKCE login.
- * Stores verifier + state in sessionStorage, then redirects to GitHub.
+ * Start the GitHub OAuth login.
+ * Stores state in sessionStorage for CSRF protection, then redirects to GitHub.
  *
  * @param {string} clientId
  * @param {string} redirectUri
  */
-export async function initiateLogin(clientId, redirectUri) {
-  const verifier = generateCodeVerifier();
-  const state    = generateState();
-  const challenge = await generateCodeChallenge(verifier);
+export function initiateLogin(clientId, redirectUri) {
+  const state = generateState();
 
-  sessionStorage.setItem(SESSION_KEY_VERIFIER, verifier);
-  sessionStorage.setItem(SESSION_KEY_STATE,    state);
+  sessionStorage.setItem(SESSION_KEY_STATE, state);
 
   const params = new URLSearchParams({
-    client_id:             clientId,
-    redirect_uri:          redirectUri,
-    scope:                 'repo',
+    client_id:    clientId,
+    redirect_uri: redirectUri,
+    scope:        'repo',
     state,
-    code_challenge:        challenge,
-    code_challenge_method: 'S256',
   });
 
   window.location.href = `https://github.com/login/oauth/authorize?${params}`;
@@ -91,20 +68,18 @@ export async function handleCallback(workerUrl) {
 
   if (!code || !state) return null;
 
-  const storedState    = sessionStorage.getItem(SESSION_KEY_STATE);
-  const codeVerifier   = sessionStorage.getItem(SESSION_KEY_VERIFIER);
+  const storedState = sessionStorage.getItem(SESSION_KEY_STATE);
 
   if (state !== storedState) {
     throw new Error('OAuth state mismatch — possible CSRF attack.');
   }
 
   sessionStorage.removeItem(SESSION_KEY_STATE);
-  sessionStorage.removeItem(SESSION_KEY_VERIFIER);
 
   const response = await fetch(workerUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, code_verifier: codeVerifier }),
+    body: JSON.stringify({ code }),
   });
 
   if (!response.ok) {
@@ -136,7 +111,6 @@ export function getToken() {
  */
 export function logout() {
   sessionStorage.removeItem(SESSION_KEY_TOKEN);
-  sessionStorage.removeItem(SESSION_KEY_VERIFIER);
   sessionStorage.removeItem(SESSION_KEY_STATE);
 }
 
