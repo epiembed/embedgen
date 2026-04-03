@@ -17,10 +17,6 @@ import { getUser, listRepos, createRepo } from '../../github/api.js';
 import { createGitHubLogin } from '../components/github-login.js';
 import { createRepoPicker } from '../components/repo-picker.js';
 
-const CLIENT_ID  = import.meta.env.VITE_GITHUB_CLIENT_ID  ?? '';
-const WORKER_URL = import.meta.env.VITE_GITHUB_WORKER_URL ?? '';
-const REDIRECT_URI = window.location.origin + window.location.pathname;
-
 const STATE_KEY = 'embedgen_pre_oauth_state';
 
 /**
@@ -41,7 +37,7 @@ export async function handleOAuthCallback(store) {
 
   console.log('[embedgen:export] OAuth callback detected — exchanging code for token');
   try {
-    await handleCallback(WORKER_URL, CLIENT_ID);
+    await handleCallback();
     console.log('[embedgen:export] OAuth token obtained successfully');
     // Ensure user lands on export step after login
     if (store.getState().embeddings) {
@@ -127,15 +123,13 @@ export function renderExport(container, state, store, toaster = null) {
 
   // Login component
   const loginComponent = createGitHubLogin({
-    clientId: CLIENT_ID,
-    redirectUri: REDIRECT_URI,
     getUser,
-    initiateLogin: async (clientId, redirectUri) => {
+    initiateLogin: async () => {
       // Persist state so it survives the OAuth redirect
       try {
         sessionStorage.setItem(STATE_KEY, JSON.stringify(store.getState()));
       } catch { /* storage quota exceeded — proceed anyway */ }
-      await initiateLogin(clientId, redirectUri);
+      await initiateLogin();
     },
     getToken,
     logout,
