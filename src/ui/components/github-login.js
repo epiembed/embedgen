@@ -14,10 +14,8 @@
 
 /**
  * @param {object} opts
- * @param {string}   opts.clientId
- * @param {string}   opts.redirectUri
  * @param {Function} opts.getUser       — (token) => Promise<{ login, avatar_url }>
- * @param {Function} opts.initiateLogin — (clientId, redirectUri) => Promise<void>
+ * @param {Function} opts.initiateLogin — () => Promise<void>
  * @param {Function} opts.getToken      — () => string|null
  * @param {Function} opts.logout        — () => void
  * @param {Function} [opts.onLogin]     — (user) => void  called after successful login
@@ -25,7 +23,6 @@
  * @returns {{ el: HTMLElement, init: () => Promise<void> }}
  */
 export function createGitHubLogin({
-  clientId, redirectUri,
   getUser, initiateLogin, getToken, logout,
   onLogin, onLogout,
 }) {
@@ -44,7 +41,7 @@ export function createGitHubLogin({
   loginBtn.textContent = 'Login with GitHub';
   loginBtn.addEventListener('click', async () => {
     setLoading(true);
-    await initiateLogin(clientId, redirectUri);
+    await initiateLogin();
   });
   loggedOut.appendChild(loginBtn);
 
