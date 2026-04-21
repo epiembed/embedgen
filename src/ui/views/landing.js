@@ -57,12 +57,7 @@ export function renderLanding(container, _state, store) {
     onFile: file => handleRaw(file, feedbackEl, store, spinner.el),
   }));
 
-  cards.appendChild(buildCard({
-    title: 'Upload TF Projector Data',
-    description: 'Already have tensors? Load a tensor TSV (and optional metadata TSV).',
-    label: 'Drop a tensor TSV file here, or click to browse',
-    onFile: file => handleProjector(file, feedbackEl, store, spinner.el),
-  }));
+  cards.appendChild(buildProjectorCard(feedbackEl, store, spinner.el));
 
   el.appendChild(cards);
 
@@ -134,13 +129,12 @@ function handleRaw(file, feedbackEl, store, spinnerEl) {
   store.setState({ step: 'configure', data, selectedColumn: defaultColumn, metaColumns });
 }
 
-function handleProjector(file, feedbackEl, store, spinnerEl) {
-  console.log(`[embedgen:landing] handleProjector — file: "${file.fileName}"`);
+function handleProjector(tensorContent, metadataContent, feedbackEl, store, spinnerEl) {
   clearFeedback(feedbackEl);
   if (spinnerEl) spinnerEl.hidden = false;
   let result;
   try {
-    result = parseProjector(file.content);
+    result = parseProjector(tensorContent, metadataContent ?? null);
     console.log('[embedgen:landing] projector parsed', result);
   } catch (err) {
     console.error('[embedgen:landing] projector parse error', err);
@@ -150,7 +144,15 @@ function handleProjector(file, feedbackEl, store, spinnerEl) {
     if (spinnerEl) spinnerEl.hidden = true;
   }
   console.log('[embedgen:landing] navigating to export (projector mode)');
-  store.setState({ step: 'export', projectorData: result });
+  store.setState({
+    step: 'export',
+    embeddings: {
+      vectors: result.vectors,
+      metadata: result.metadata ?? { headers: [], rows: [] },
+      modelId: null,
+      dimensions: result.vectors[0]?.length ?? null,
+    },
+  });
 }
 
 // ── Builders ────────────────────────────────────────────────────────
@@ -176,6 +178,78 @@ function buildCard({ title, description, label, onFile }) {
   card.appendChild(h2);
   card.appendChild(p);
   card.appendChild(upload);
+  return card;
+}
+
+function buildProjectorCard(feedbackEl, store, spinnerEl) {
+  const card = document.createElement('div');
+  card.className = 'landing__card';
+
+  const h2 = document.createElement('h2');
+  h2.className = 'landing__card-title';
+  h2.textContent = 'Upload TF Projector Data';
+
+  const p = document.createElement('p');
+  p.className = 'landing__card-desc';
+  p.textContent = 'Already have tensors? Load a tensor TSV and an optional metadata TSV.';
+
+  card.appendChild(h2);
+  card.appendChild(p);
+
+  let tensorContent = null;
+  let metadataContent = null;
+
+  // ── Tensor upload ──
+  const tensorLabel = document.createElement('p');
+  tensorLabel.className = 'landing__card-upload-label';
+  tensorLabel.textContent = 'Tensor TSV (required)';
+  card.appendChild(tensorLabel);
+
+  const tensorStatus = document.createElement('span');
+  tensorStatus.className = 'landing__card-file-status';
+  tensorLabel.appendChild(tensorStatus);
+
+  const tensorUpload = createFileUpload({
+    label: 'Drop tensor TSV here, or click to browse',
+    onFile: ({ fileName, content }) => {
+      tensorContent = content;
+      tensorStatus.textContent = ` — ${fileName}`;
+      loadBtn.disabled = false;
+    },
+    onError: msg => showError(feedbackEl, msg),
+  });
+  card.appendChild(tensorUpload);
+
+  // ── Metadata upload ──
+  const metaLabel = document.createElement('p');
+  metaLabel.className = 'landing__card-upload-label';
+  metaLabel.textContent = 'Metadata TSV (optional)';
+  card.appendChild(metaLabel);
+
+  const metaStatus = document.createElement('span');
+  metaStatus.className = 'landing__card-file-status';
+  metaLabel.appendChild(metaStatus);
+
+  const metaUpload = createFileUpload({
+    label: 'Drop metadata TSV here, or click to browse',
+    onFile: ({ fileName, content }) => {
+      metadataContent = content;
+      metaStatus.textContent = ` — ${fileName}`;
+    },
+    onError: msg => showError(feedbackEl, msg),
+  });
+  card.appendChild(metaUpload);
+
+  // ── Load button ──
+  const loadBtn = document.createElement('button');
+  loadBtn.className = 'landing__projector-load-btn';
+  loadBtn.textContent = 'Load into viewer';
+  loadBtn.disabled = true;
+  loadBtn.addEventListener('click', () => {
+    handleProjector(tensorContent, metadataContent, feedbackEl, store, spinnerEl);
+  });
+  card.appendChild(loadBtn);
+
   return card;
 }
 
