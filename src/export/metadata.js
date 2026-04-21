@@ -15,7 +15,7 @@
  * @returns {string}
  */
 export function toTSV(headers, rows) {
-  const sanitize = v => (v === null || v === undefined) ? '' : String(v).replace(/\t/g, ' ');
+  const sanitize = v => (v === null || v === undefined) ? '' : String(v).replace(/\t/g, ' ').replace(/\r?\n/g, ' ');
 
   if (headers.length === 1) {
     // Single-column: no header row
