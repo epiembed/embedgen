@@ -96,11 +96,30 @@ export function renderEmbed(container, state, store, toaster = null) {
     }
 
     const colIndex = data.headers.indexOf(selectedColumn);
+
+    // Truncate texts that exceed the model's per-text token limit.
+    // Uses the same chars/4 heuristic as the batcher's estimateTokens.
+    const maxChars = model.maxTokens ? model.maxTokens * 4 : null;
+    let truncatedCount = 0;
+
     const texts = data.rows
       .map(row => row[colIndex])
-      .map(v => (v === null || v === undefined) ? '' : String(v));
+      .map(v => (v === null || v === undefined) ? '' : String(v))
+      .map(text => {
+        if (maxChars && text.length > maxChars) {
+          truncatedCount++;
+          return text.slice(0, maxChars);
+        }
+        return text;
+      });
 
-    console.log(`[embedgen:embed] ${texts.length} texts extracted from column "${selectedColumn}"`);
+    if (truncatedCount > 0) {
+      const msg = `${truncatedCount} row${truncatedCount > 1 ? 's' : ''} exceeded the ${model.maxTokens}-token limit and were truncated to fit.`;
+      console.warn(`[embedgen:embed] ${msg}`);
+      toaster?.show(msg, { type: 'warning', timeout: 10000 });
+    }
+
+    console.log(`[embedgen:embed] ${texts.length} texts extracted from column "${selectedColumn}"${truncatedCount > 0 ? ` (${truncatedCount} truncated)` : ''}`);
 
     const batches = createBatches(
       texts,
@@ -147,6 +166,13 @@ export function renderEmbed(container, state, store, toaster = null) {
           vectors = await adapter.embed(batch, model.name, apiKey, options);
           console.log(`[embedgen:embed] batch ${i + 1} done — got ${vectors.length} vectors, dim: ${vectors[0]?.length}`);
 
+          if (vectors.length !== batch.length) {
+            throw new Error(
+              `Embedding count mismatch in batch ${i + 1}: sent ${batch.length} texts but received ${vectors.length} embeddings. ` +
+              `One or more inputs may exceed the model's ${model.maxTokens ? `${model.maxTokens}-token` : 'token'} limit.`
+            );
+          }
+
           // After first HF batch succeeds, hide download UI and show progress bar
           if (isHuggingFace && i === 0) {
             downloadProgress?.complete();
@@ -190,7 +216,7 @@ export function renderEmbed(container, state, store, toaster = null) {
     console.log(`[embedgen:embed] complete — ${allVectors.length} vectors, dim: ${allVectors[0]?.length}`);
     bar.update({ pct: 1, label: `Done — ${allVectors.length} vectors generated` });
 
-    const metaHeaders = (metaColumns ?? []).filter(c => c !== selectedColumn);
+    const metaHeaders = metaColumns ?? [];
     const metaRows = data.rows.map(row =>
       metaHeaders.map(h => row[data.headers.indexOf(h)] ?? '')
     );

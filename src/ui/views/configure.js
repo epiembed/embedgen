@@ -82,6 +82,7 @@ export function renderConfigure(container, state, store) {
   // Model selector lives in a wrapper so it can be rebuilt on column change
   const modelSelectorWrapper = document.createElement('div');
   let modelSelector;
+  let dimSection; // set after buildSection call below
 
   function buildModelSelector(allowedInputTypes) {
     modelSelectorWrapper.innerHTML = '';
@@ -94,6 +95,7 @@ export function renderConfigure(container, state, store) {
         const isHF = model?.provider === 'huggingface';
         store.setState({ modelId, apiKey: '', dimensions: null });
         updateDimensionSlider(dimSlider, modelId);
+        if (dimSection) dimSection.hidden = !model?.supportsMatryoshka;
         renderApiKeyInput(apiKeyWrapper, modelId);
         privacyBanner.hidden = !isHF;
         apiKeySection.querySelector('.configure__section-title').textContent =
@@ -123,7 +125,9 @@ export function renderConfigure(container, state, store) {
   el.appendChild(imageModeNotice);
   el.appendChild(privacyBanner);
   el.appendChild(apiKeySection);
-  el.appendChild(buildSection('Output dimensions', dimSlider));
+  dimSection = buildSection('Output dimensions', dimSlider);
+  dimSection.hidden = !getModelById(currentModelId)?.supportsMatryoshka;
+  el.appendChild(dimSection);
 
   // ── Column change handler ───────────────────────────────────────
   function onColumnChange(col) {

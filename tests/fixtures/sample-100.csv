@@ -1,0 +1,101 @@
+id,text,category
+1,The quick brown fox jumps over the lazy dog,animals
+2,Machine learning models encode semantic meaning into high-dimensional vectors,technology
+3,A stitch in time saves nine,proverbs
+4,The mitochondria is the powerhouse of the cell,biology
+5,"To be, or not to be, that is the question",literature
+6,Neural networks are inspired by the structure of the human brain,technology
+7,Climate change is one of the most pressing challenges of our time,environment
+8,The speed of light in a vacuum is approximately 299792458 metres per second,physics
+9,Photosynthesis converts sunlight into chemical energy stored in glucose,biology
+10,All that glitters is not gold,proverbs
+11,The Renaissance was a period of cultural and artistic flourishing in Europe,history
+12,Quantum entanglement allows particles to be correlated across vast distances,physics
+13,A rolling stone gathers no moss,proverbs
+14,The Amazon rainforest produces about 20 percent of the world's oxygen,environment
+15,Transformer architectures revolutionised natural language processing,technology
+16,Democracy is the worst form of government except for all the others,politics
+17,The double helix structure of DNA was discovered by Watson and Crick in 1953,biology
+18,Water boils at 100 degrees Celsius at standard atmospheric pressure,physics
+19,Rome was not built in a day,proverbs
+20,The French Revolution began in 1789 and ended the monarchy,history
+21,Gradient descent is an optimisation algorithm used to train neural networks,technology
+22,The Great Barrier Reef is the world's largest coral reef system,environment
+23,An apple a day keeps the doctor away,proverbs
+24,Photons are massless particles that carry electromagnetic force,physics
+25,Shakespeare wrote 37 plays and 154 sonnets during his lifetime,literature
+26,Deforestation contributes significantly to greenhouse gas emissions,environment
+27,The Byzantine Empire was the continuation of the Eastern Roman Empire,history
+28,Reinforcement learning trains agents through rewards and penalties,technology
+29,Birds evolved from a group of two-legged dinosaurs known as theropods,biology
+30,The pen is mightier than the sword,proverbs
+31,Black holes are regions of spacetime where gravity is so strong nothing can escape,physics
+32,The Industrial Revolution began in Britain in the late 18th century,history
+33,Semantic similarity measures how alike two pieces of text are in meaning,technology
+34,The Amazon River carries more water than any other river on Earth,environment
+35,Every cloud has a silver lining,proverbs
+36,CRISPR-Cas9 is a revolutionary gene-editing technology,biology
+37,The Battle of Waterloo in 1815 ended Napoleon's rule,history
+38,Convolutional neural networks excel at image recognition tasks,technology
+39,Coral reefs support about 25 percent of all marine species,environment
+40,The early bird catches the worm,proverbs
+41,Entropy is a measure of disorder or randomness in a thermodynamic system,physics
+42,The printing press transformed the spread of knowledge in medieval Europe,history
+43,Attention mechanisms allow models to focus on relevant parts of the input,technology
+44,Polar ice caps are melting at an unprecedented rate due to global warming,environment
+45,Necessity is the mother of invention,proverbs
+46,DNA replication ensures genetic information is passed to daughter cells,biology
+47,The Cold War was a period of geopolitical tension between the US and USSR,history
+48,Large language models are pretrained on vast corpora of text data,technology
+49,Ocean acidification threatens shellfish and coral reef ecosystems,environment
+50,Actions speak louder than words,proverbs
+51,The theory of relativity changed our understanding of space and time,physics
+52,The Silk Road connected trade networks across Asia Europe and Africa,history
+53,Tokenisation splits text into subword units before embedding,technology
+54,Biodiversity loss is accelerating due to habitat destruction,environment
+55,Too many cooks spoil the broth,proverbs
+56,Mitosis produces two identical daughter cells from a single parent cell,biology
+57,The Ottoman Empire lasted for over six centuries until 1922,history
+58,Fine-tuning adapts a pretrained model to a specific downstream task,technology
+59,Wetlands act as natural filters that purify water and reduce flooding,environment
+60,The grass is always greener on the other side,proverbs
+61,Supernovae are stellar explosions that can outshine entire galaxies,physics
+62,Ancient Egypt developed one of the earliest writing systems in hieroglyphs,history
+63,Vector databases store embeddings and enable fast similarity search,technology
+64,Plastic pollution is accumulating in the world's oceans at alarming rates,environment
+65,Honesty is the best policy,proverbs
+66,The human genome contains approximately three billion base pairs,biology
+67,The Ming Dynasty ruled China from 1368 to 1644,history
+68,Cosine similarity measures the angle between two embedding vectors,technology
+69,Renewable energy sources like solar and wind are growing rapidly,environment
+70,Fortune favours the brave,proverbs
+71,Dark matter makes up about 27 percent of the universe's total mass-energy,physics
+72,The Maya civilisation developed advanced astronomy and mathematics,history
+73,Dimensionality reduction compresses high-dimensional data into fewer dimensions,technology
+74,Wildfires are becoming more frequent and intense due to climate change,environment
+75,You can't judge a book by its cover,proverbs
+76,Neurons communicate through electrical and chemical signals across synapses,biology
+77,The Roman aqueducts were engineering marvels that supplied cities with water,history
+78,Batch normalisation stabilises training by normalising layer inputs,technology
+79,Sea level rise threatens coastal communities around the world,environment
+80,Knowledge is power,proverbs
+81,The Higgs boson was discovered at CERN in 2012 confirming the Standard Model,physics
+82,The Mongol Empire was the largest contiguous land empire in history,history
+83,Embedding spaces capture semantic relationships between words and sentences,technology
+84,Methane is a potent greenhouse gas released by livestock and landfills,environment
+85,Two wrongs don't make a right,proverbs
+86,Stem cells have the potential to develop into many different cell types,biology
+87,The Enlightenment promoted reason science and individual rights,history
+88,Overfitting occurs when a model learns noise rather than the underlying pattern,technology
+89,Permafrost thawing releases stored carbon into the atmosphere,environment
+90,Better late than never,proverbs
+91,Neutron stars are the remnants of massive stars after a supernova explosion,physics
+92,The Byzantine Emperor Justinian codified Roman law in the Corpus Juris Civilis,history
+93,Dropout regularisation prevents overfitting by randomly deactivating neurons,technology
+94,Urban heat islands make cities significantly warmer than surrounding rural areas,environment
+95,Where there is a will there is a way,proverbs
+96,The immune system defends the body against pathogens using antibodies,biology
+97,The Treaty of Westphalia in 1648 established the modern concept of sovereignty,history
+98,Retrieval-augmented generation combines search with language model generation,technology
+99,Sustainable agriculture practices help preserve soil health and biodiversity,environment
+100,All good things must come to an end,proverbs

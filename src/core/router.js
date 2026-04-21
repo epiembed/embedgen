@@ -21,7 +21,12 @@ export function createRouter(store, container) {
     views.set(step, renderFn);
   }
 
+  let currentStep = null;
+
   function render(state) {
+    if (state.step === currentStep) return;
+    currentStep = state.step;
+
     const renderFn = views.get(state.step);
     if (!renderFn) {
       console.warn(`[embedgen:router] No view registered for step: "${state.step}"`);

@@ -293,7 +293,7 @@ const MODELS = [
     id: 'gemini/gemini-embedding-2-preview',
     provider: 'gemini',
     name: 'gemini-embedding-2-preview',
-    displayName: 'Gemini Embedding 2 (Preview)',
+    displayName: 'Gemini Embedding 2',
     dimensions: 3072,
     maxTokens: null, // not yet published
     maxBatchSize: 100,
