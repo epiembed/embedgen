@@ -72,10 +72,6 @@ export function renderConfigure(container, state, store) {
   const apiKeyWrapper = document.createElement('div');
   renderApiKeyInput(apiKeyWrapper, currentModelId);
 
-  // Privacy banner — shown only for HuggingFace models
-  const privacyBanner = buildPrivacyBanner();
-  privacyBanner.hidden = getModelById(currentModelId)?.provider !== 'huggingface';
-
   // API key section — title adapts for HF
   const apiKeySection = buildSection('API key', apiKeyWrapper);
 
@@ -97,7 +93,6 @@ export function renderConfigure(container, state, store) {
         updateDimensionSlider(dimSlider, modelId);
         if (dimSection) dimSection.hidden = !model?.supportsMatryoshka;
         renderApiKeyInput(apiKeyWrapper, modelId);
-        privacyBanner.hidden = !isHF;
         apiKeySection.querySelector('.configure__section-title').textContent =
           isHF ? 'Runtime' : 'API key';
       },
@@ -123,7 +118,6 @@ export function renderConfigure(container, state, store) {
 
   el.appendChild(buildSection('Model', modelSelectorWrapper));
   el.appendChild(imageModeNotice);
-  el.appendChild(privacyBanner);
   el.appendChild(apiKeySection);
   dimSection = buildSection('Output dimensions', dimSlider);
   dimSection.hidden = !getModelById(currentModelId)?.supportsMatryoshka;
@@ -280,30 +274,6 @@ function buildMetaSelector(data, selectedColumn, initialMetaColumns, store) {
   return wrapper;
 }
 
-function buildPrivacyBanner() {
-  const banner = document.createElement('div');
-  banner.className = 'configure__privacy-banner';
-
-  const icon = document.createElement('span');
-  icon.className = 'configure__privacy-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  icon.textContent = '🔒';
-
-  const text = document.createElement('div');
-  text.className = 'configure__privacy-text';
-
-  const strong = document.createElement('strong');
-  strong.textContent = 'Your data stays in your browser.';
-
-  const p = document.createElement('p');
-  p.textContent = 'This model runs entirely on your device using WebAssembly (or WebGPU if available). No text is sent to any server.';
-
-  text.appendChild(strong);
-  text.appendChild(p);
-  banner.appendChild(icon);
-  banner.appendChild(text);
-  return banner;
-}
 
 function renderApiKeyInput(container, modelId) {
   container.innerHTML = '';
