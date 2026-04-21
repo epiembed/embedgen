@@ -20,14 +20,15 @@ function detectDelimiter(text) {
  * @param {string} text
  * @param {number} pos
  * @param {string} delimiter
+ * @param {boolean} allowQuoting - false for TSV (quotes are literal characters)
  * @returns {{ fields: string[], nextPos: number }}
  */
-function parseRecord(text, pos, delimiter) {
+function parseRecord(text, pos, delimiter, allowQuoting) {
   const fields = [];
   const len = text.length;
 
   while (pos <= len) {
-    if (text[pos] === '"') {
+    if (allowQuoting && text[pos] === '"') {
       // Quoted field
       let field = '';
       pos++; // skip opening quote
@@ -88,11 +89,12 @@ export function parse(text) {
   const trimmed = normalized.trimEnd();
 
   const delimiter = detectDelimiter(trimmed);
+  const allowQuoting = delimiter === ','; // TSV treats quotes as literal characters
   const records = [];
   let pos = 0;
 
   while (pos < trimmed.length) {
-    const { fields, nextPos } = parseRecord(trimmed, pos, delimiter);
+    const { fields, nextPos } = parseRecord(trimmed, pos, delimiter, allowQuoting);
     records.push(fields);
     pos = nextPos;
   }
