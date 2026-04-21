@@ -46,6 +46,17 @@ export function renderLanding(container, _state, store) {
   el.appendChild(heading);
   el.appendChild(sub);
 
+  // ── Feedback (errors / warnings) ───────────────────────────────
+  const feedbackEl = document.createElement('div');
+  feedbackEl.className = 'landing__feedback';
+  feedbackEl.setAttribute('aria-live', 'polite');
+  feedbackEl.setAttribute('aria-atomic', 'true');
+
+  // ── Parse loading spinner ──────────────────────────────────────
+  const spinner = createSpinner('Parsing file…');
+  spinner.el.className += ' landing__spinner';
+  spinner.el.hidden = true;
+
   // ── Cards ──────────────────────────────────────────────────────
   const cards = document.createElement('div');
   cards.className = 'landing__cards';
@@ -60,18 +71,7 @@ export function renderLanding(container, _state, store) {
   cards.appendChild(buildProjectorCard(feedbackEl, store, spinner.el));
 
   el.appendChild(cards);
-
-  // ── Feedback (errors / warnings) ───────────────────────────────
-  const feedbackEl = document.createElement('div');
-  feedbackEl.className = 'landing__feedback';
-  feedbackEl.setAttribute('aria-live', 'polite');
-  feedbackEl.setAttribute('aria-atomic', 'true');
   el.appendChild(feedbackEl);
-
-  // ── Parse loading spinner ──────────────────────────────────────
-  const spinner = createSpinner('Parsing file…');
-  spinner.el.className += ' landing__spinner';
-  spinner.el.hidden = true;
   el.appendChild(spinner.el);
 
   // ── Data preview (shown after successful raw parse) ────────────
