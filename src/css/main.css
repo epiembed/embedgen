@@ -4,16 +4,16 @@
 @import './components.css';
 
 :root {
-  /* Colors */
-  --color-bg:          #f9f9f8;
+  /* Colors — rose/crimson palette */
+  --color-bg:          #fff0f3;
   --color-surface:     #ffffff;
-  --color-border:      #e5e5e3;
-  --color-border-soft: #efefed;
+  --color-border:      #ffb3c1;
+  --color-border-soft: #ffccd5;
   --color-text:        #1a1a18;
   --color-text-muted:  #6b6b67;
-  --color-accent:      #2563eb;
-  --color-accent-hover:#1d4ed8;
-  --color-accent-soft: #eff6ff;
+  --color-accent:      #c9184a;
+  --color-accent-hover:#a4133c;
+  --color-accent-soft: #ffccd5;
   --color-error:       #dc2626;
   --color-success:     #16a34a;
 

@@ -16,10 +16,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-10) var(--space-8);
+  padding: var(--space-8) var(--space-6);
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
+  background-color: #fff8f9;
   color: var(--color-text-muted);
   cursor: pointer;
   transition: border-color var(--transition-base), background-color var(--transition-base), color var(--transition-base);
@@ -37,6 +37,50 @@
 .file-upload__zone--drag-over {
   border-color: var(--color-accent);
   background-color: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+/* Success state — shown after a file is selected */
+.file-upload__success {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--color-success);
+  border-radius: var(--radius-lg);
+  background-color: #f0fdf4;
+}
+
+.file-upload__success-icon {
+  font-size: var(--font-size-xl);
+  color: var(--color-success);
+  flex-shrink: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.file-upload__success-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-upload__success-change {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+}
+
+.file-upload__success-change:hover {
   color: var(--color-accent);
 }
 
@@ -128,10 +172,11 @@
 /* ── Landing view ────────────────────────────────────────────────── */
 
 .landing__heading {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
   margin-bottom: var(--space-2);
+  color: #590d22;
 }
 
 .landing__sub {
@@ -153,12 +198,18 @@
 .landing__card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
 }
 
 .landing__card-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
+  color: #800f2f;
 }
 
 .landing__card-desc {

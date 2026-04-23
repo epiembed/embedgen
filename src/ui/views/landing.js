@@ -199,50 +199,25 @@ function buildProjectorCard(feedbackEl, store, spinnerEl) {
   let tensorContent = null;
   let metadataContent = null;
 
-  // ── Tensor upload ──
-  const tensorLabel = document.createElement('p');
-  tensorLabel.className = 'landing__card-upload-label';
-  tensorLabel.textContent = 'Tensor TSV (required)';
-  card.appendChild(tensorLabel);
-
-  const tensorStatus = document.createElement('span');
-  tensorStatus.className = 'landing__card-file-status';
-  tensorLabel.appendChild(tensorStatus);
-
   const tensorUpload = createFileUpload({
-    label: 'Drop tensor TSV here, or click to browse',
-    onFile: ({ fileName, content }) => {
+    label: 'Tensor TSV (required) — drop here or click to browse',
+    onFile: ({ content }) => {
       tensorContent = content;
-      tensorStatus.textContent = ` — ${fileName}`;
       loadBtn.disabled = false;
     },
     onError: msg => showError(feedbackEl, msg),
   });
   card.appendChild(tensorUpload);
 
-  // ── Metadata upload ──
-  const metaLabel = document.createElement('p');
-  metaLabel.className = 'landing__card-upload-label';
-  metaLabel.textContent = 'Metadata TSV (optional)';
-  card.appendChild(metaLabel);
-
-  const metaStatus = document.createElement('span');
-  metaStatus.className = 'landing__card-file-status';
-  metaLabel.appendChild(metaStatus);
-
   const metaUpload = createFileUpload({
-    label: 'Drop metadata TSV here, or click to browse',
-    onFile: ({ fileName, content }) => {
-      metadataContent = content;
-      metaStatus.textContent = ` — ${fileName}`;
-    },
+    label: 'Metadata TSV (optional) — drop here or click to browse',
+    onFile: ({ content }) => { metadataContent = content; },
     onError: msg => showError(feedbackEl, msg),
   });
   card.appendChild(metaUpload);
 
-  // ── Load button ──
   const loadBtn = document.createElement('button');
-  loadBtn.className = 'landing__projector-load-btn';
+  loadBtn.className = 'btn btn--primary';
   loadBtn.textContent = 'Load into viewer';
   loadBtn.disabled = true;
   loadBtn.addEventListener('click', () => {

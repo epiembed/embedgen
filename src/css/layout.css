@@ -1,9 +1,9 @@
 /* EmbedGen — layout and responsive grid */
 
 .site-header {
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: var(--shadow-xs);
+  background-color: #590d22;
+  border-bottom: none;
+  box-shadow: 0 2px 8px rgba(89,13,34,0.35);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -21,12 +21,12 @@
 .site-header__logo {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: #fff;
   letter-spacing: -0.02em;
 }
 
 .site-header__logo span {
-  color: var(--color-accent);
+  color: #ff8fa3;
 }
 
 .site-main {
