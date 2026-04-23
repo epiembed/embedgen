@@ -15,6 +15,8 @@ import { adapter as geminiAdapter } from '../../embeddings/gemini.js';
 import { adapter as huggingfaceAdapter } from '../../embeddings/huggingface.js';
 import { RateLimitError } from '../../embeddings/provider.js';
 import { formatEmbedError, formatDownloadError } from '../errors.js';
+import { detectImageColumns } from './configure.js';
+import { fetchImageAsBase64 } from '../../data/transforms.js';
 
 const ADAPTERS = {
   openai:      openaiAdapter,
@@ -36,6 +38,9 @@ export function renderEmbed(container, state, store, toaster = null) {
   const model = getModelById(modelId);
   const adapter = model ? ADAPTERS[model.provider] : null;
   const isHuggingFace = model?.provider === 'huggingface';
+  const isImageMode = model?.inputType === 'multimodal' && data
+    ? detectImageColumns(data).has(selectedColumn)
+    : false;
 
   const el = document.createElement('div');
   el.className = 'embed-view';
@@ -97,36 +102,72 @@ export function renderEmbed(container, state, store, toaster = null) {
 
     const colIndex = data.headers.indexOf(selectedColumn);
 
-    // Truncate texts that exceed the model's per-text token limit.
-    // Uses the same chars/4 heuristic as the batcher's estimateTokens.
-    const maxChars = model.maxTokens ? model.maxTokens * 4 : null;
-    let truncatedCount = 0;
+    let inputs; // string[] for text mode, {type,…}[] for image mode
 
-    const texts = data.rows
-      .map(row => row[colIndex])
-      .map(v => (v === null || v === undefined) ? '' : String(v))
-      .map(text => {
-        if (maxChars && text.length > maxChars) {
-          truncatedCount++;
-          return text.slice(0, maxChars);
-        }
-        return text;
+    if (isImageMode) {
+      // ── Image mode ──────────────────────────────────────────────
+      // Voyage accepts image_url directly; Gemini requires base64.
+      const needsBase64 = model.provider === 'gemini';
+      const rawUrls = data.rows.map(row => {
+        const v = row[colIndex];
+        return (v === null || v === undefined) ? '' : String(v).trim();
       });
 
-    if (truncatedCount > 0) {
-      const msg = `${truncatedCount} row${truncatedCount > 1 ? 's' : ''} exceeded the ${model.maxTokens}-token limit and were truncated to fit.`;
-      console.warn(`[embedgen:embed] ${msg}`);
-      toaster?.show(msg, { type: 'warning', timeout: 10000 });
+      console.log(`[embedgen:embed] image mode — ${rawUrls.length} URLs, provider: ${model.provider}`);
+      bar.update({ pct: 0, label: `Fetching ${rawUrls.length} images…` });
+
+      if (needsBase64) {
+        const results = [];
+        for (let i = 0; i < rawUrls.length; i++) {
+          if (cancelled) return;
+          bar.update({ pct: i / rawUrls.length, label: `Fetching image ${i + 1} of ${rawUrls.length}…` });
+          try {
+            const { data: b64, mimeType } = await fetchImageAsBase64(rawUrls[i]);
+            results.push({ type: 'image_base64', data: b64, mimeType });
+          } catch (err) {
+            bar.setError(`Failed to fetch image ${i + 1}: ${err.message}`);
+            toaster?.show(`Failed to fetch image ${i + 1}: ${err.message}`, { type: 'error', timeout: 0 });
+            retryBtn.hidden = false;
+            return;
+          }
+        }
+        inputs = results;
+      } else {
+        // Voyage: pass URLs directly
+        inputs = rawUrls.map(url => ({ type: 'image_url', url }));
+      }
+    } else {
+      // ── Text mode ───────────────────────────────────────────────
+      // Truncate texts that exceed the model's per-text token limit.
+      const maxChars = model.maxTokens ? model.maxTokens * 4 : null;
+      let truncatedCount = 0;
+
+      inputs = data.rows
+        .map(row => row[colIndex])
+        .map(v => (v === null || v === undefined) ? '' : String(v))
+        .map(text => {
+          if (maxChars && text.length > maxChars) {
+            truncatedCount++;
+            return text.slice(0, maxChars);
+          }
+          return text;
+        });
+
+      if (truncatedCount > 0) {
+        const msg = `${truncatedCount} row${truncatedCount > 1 ? 's' : ''} exceeded the ${model.maxTokens}-token limit and were truncated to fit.`;
+        console.warn(`[embedgen:embed] ${msg}`);
+        toaster?.show(msg, { type: 'warning', timeout: 10000 });
+      }
+
+      console.log(`[embedgen:embed] ${inputs.length} texts extracted from column "${selectedColumn}"${truncatedCount > 0 ? ` (${truncatedCount} truncated)` : ''}`);
     }
 
-    console.log(`[embedgen:embed] ${texts.length} texts extracted from column "${selectedColumn}"${truncatedCount > 0 ? ` (${truncatedCount} truncated)` : ''}`);
+    // For images, batch by item count only (no token budget).
+    const batchInputs = isImageMode
+      ? chunkArray(inputs, model.maxBatchSize)
+      : createBatches(inputs, model.maxBatchSize, model.maxTokens ? model.maxTokens * model.maxBatchSize : Infinity);
 
-    const batches = createBatches(
-      texts,
-      model.maxBatchSize,
-      model.maxTokens ? model.maxTokens * model.maxBatchSize : Infinity,
-    );
-
+    const batches = batchInputs;
     const totalBatches = batches.length;
     console.log(`[embedgen:embed] ${totalBatches} batch(es) created (maxBatchSize: ${model.maxBatchSize})`);
     const allVectors = [];
@@ -136,7 +177,7 @@ export function renderEmbed(container, state, store, toaster = null) {
 
       bar.update({
         pct: i / totalBatches,
-        label: `Batch ${i + 1} of ${totalBatches} — ${allVectors.length} of ${texts.length} embedded`,
+        label: `Batch ${i + 1} of ${totalBatches} — ${allVectors.length} of ${inputs.length} embedded`,
       });
 
       const batch = batches[i];
@@ -214,7 +255,7 @@ export function renderEmbed(container, state, store, toaster = null) {
     if (cancelled) return;
 
     console.log(`[embedgen:embed] complete — ${allVectors.length} vectors, dim: ${allVectors[0]?.length}`);
-    bar.update({ pct: 1, label: `Done — ${allVectors.length} vectors generated` });
+    bar.update({ pct: 1, label: `Done — ${allVectors.length} ${isImageMode ? 'images' : 'texts'} embedded` });
 
     const metaHeaders = metaColumns ?? [];
     const metaRows = data.rows.map(row =>
@@ -238,4 +279,10 @@ export function renderEmbed(container, state, store, toaster = null) {
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function chunkArray(arr, size) {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+  return chunks;
 }
