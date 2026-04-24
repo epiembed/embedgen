@@ -61,23 +61,10 @@ export function createFileUpload({ onFile, onError = () => {}, label = 'Drop a f
   successEl.className = 'file-upload__success';
   successEl.hidden = true;
 
-  const successIcon = document.createElement('span');
-  successIcon.className = 'file-upload__success-icon';
-  successIcon.setAttribute('aria-hidden', 'true');
-  successIcon.textContent = '✓';
-
   const successName = document.createElement('span');
   successName.className = 'file-upload__success-name';
 
-  const changeBtn = document.createElement('button');
-  changeBtn.type = 'button';
-  changeBtn.className = 'file-upload__success-change';
-  changeBtn.textContent = 'Change';
-  changeBtn.addEventListener('click', () => input.click());
-
-  successEl.appendChild(successIcon);
   successEl.appendChild(successName);
-  successEl.appendChild(changeBtn);
 
   wrapper.appendChild(zone);
   wrapper.appendChild(successEl);
