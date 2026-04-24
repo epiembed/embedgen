@@ -46,14 +46,11 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--color-success);
   border-radius: var(--radius-lg);
-  background-color: #f0fdf4;
 }
 
 .file-upload__success-icon {
   font-size: var(--font-size-xl);
-  color: var(--color-success);
   flex-shrink: 0;
   font-weight: var(--font-weight-semibold);
 }
