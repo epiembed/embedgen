@@ -29,6 +29,20 @@
   color: #ff8fa3;
 }
 
+.site-header__code-btn {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+  background-color: transparent;
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-4);
+}
+
+.site-header__code-btn:hover {
+  border-color: #fff;
+  color: #fff;
+  text-decoration: none;
+}
+
 .site-main {
   flex: 1;
   max-width: 860px;
