@@ -16,6 +16,7 @@ const store = createStore({
   selectedColumn: null,
   projectorData: null,
   modelId: null,
+  embeddingType: null,
   apiKey: '',
   dimensions: null,
   metaColumns: [],

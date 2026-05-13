@@ -126,7 +126,7 @@ function handleRaw(file, feedbackEl, store, spinnerEl) {
   const metaColumns = data.headers.filter(h => h !== defaultColumn);
 
   console.log('[embedgen:landing] navigating to configure');
-  store.setState({ step: 'configure', data, selectedColumn: defaultColumn, metaColumns });
+  store.setState({ step: 'configure', data, selectedColumn: defaultColumn, embeddingType: null, metaColumns });
 }
 
 function handleProjector(tensorContent, metadataContent, feedbackEl, store, spinnerEl) {

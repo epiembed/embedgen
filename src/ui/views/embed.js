@@ -15,7 +15,6 @@ import { adapter as geminiAdapter } from '../../embeddings/gemini.js';
 import { adapter as huggingfaceAdapter } from '../../embeddings/huggingface.js';
 import { RateLimitError } from '../../embeddings/provider.js';
 import { formatEmbedError, formatDownloadError } from '../errors.js';
-import { detectImageColumns } from './configure.js';
 import { fetchImageAsBase64 } from '../../data/transforms.js';
 
 const ADAPTERS = {
@@ -34,13 +33,11 @@ const BASE_BACKOFF_MS = 2000;
  * @param {object} store
  */
 export function renderEmbed(container, state, store, toaster = null) {
-  const { data, selectedColumn, modelId, apiKey, dimensions, metaColumns } = state;
+  const { data, selectedColumn, modelId, embeddingType, apiKey, dimensions, metaColumns } = state;
   const model = getModelById(modelId);
   const adapter = model ? ADAPTERS[model.provider] : null;
   const isHuggingFace = model?.provider === 'huggingface';
-  const isImageMode = model?.inputType === 'multimodal' && data
-    ? detectImageColumns(data).has(selectedColumn)
-    : false;
+  const isImageMode = embeddingType === 'image';
 
   const el = document.createElement('div');
   el.className = 'embed-view';
@@ -91,12 +88,17 @@ export function renderEmbed(container, state, store, toaster = null) {
 
   // ── Orchestration ────────────────────────────────────────────────
   async function run() {
-    console.log(`[embedgen:embed] run — model: "${modelId}", column: "${selectedColumn}", dimensions: ${dimensions}`);
+    console.log(`[embedgen:embed] run — model: "${modelId}", column: "${selectedColumn}", type: "${embeddingType ?? 'text'}", dimensions: ${dimensions}`);
 
     if (!model || !adapter) {
       console.error(`[embedgen:embed] no adapter for provider "${model?.provider}"`);
       bar.el.hidden = false;
       bar.setError(`No adapter available for provider "${model?.provider}".`);
+      return;
+    }
+    if (isImageMode && !['image', 'multimodal'].includes(model.inputType)) {
+      bar.el.hidden = false;
+      bar.setError('Select an image-capable model before generating image embeddings.');
       return;
     }
 

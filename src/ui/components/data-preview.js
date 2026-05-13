@@ -93,7 +93,7 @@ function render(wrapper, data, selectedColumn, maxRows, imageColumns = new Set()
       const val = row[i];
       const isEmpty = val === null || val === undefined || String(val).trim() === '';
 
-      if (!isEmpty && imageColumns.has(h)) {
+      if (!isEmpty && imageColumns.has(h) && isHttpUrl(val)) {
         const img = document.createElement('img');
         img.src = String(val).trim();
         img.alt = '';
@@ -117,4 +117,13 @@ function render(wrapper, data, selectedColumn, maxRows, imageColumns = new Set()
 
   scroll.appendChild(table);
   wrapper.appendChild(scroll);
+}
+
+function isHttpUrl(value) {
+  try {
+    const url = new URL(String(value).trim());
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
 }
